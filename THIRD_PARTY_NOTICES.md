@@ -92,14 +92,28 @@ and pull only the minimal parser/serialization stack:
 
 | Crate | License | Upstream |
 | --- | --- | --- |
-| `quick-xml` 0.36 | MIT | https://github.com/tafia/quick-xml |
-| `plist` 1.7 | MIT | https://github.com/ebarnard/rust-plist |
+| `quick-xml` 0.39 | MIT | https://github.com/tafia/quick-xml |
+| `plist` 1.9 | MIT | https://github.com/ebarnard/rust-plist |
 | `serde` 1 / `serde_json` 1 | MIT OR Apache-2.0 | https://github.com/serde-rs/serde |
-| `thiserror` 1 | MIT OR Apache-2.0 | https://github.com/dtolnay/thiserror |
+| `thiserror` 2 | MIT OR Apache-2.0 | https://github.com/dtolnay/thiserror |
 | `anyhow` 1 | MIT OR Apache-2.0 | https://github.com/dtolnay/anyhow |
 
 These power XML / Plist parsing, modifier and dead-key resolution, validation,
 templates, and bundles. No native code outside of Rust's own libstd is linked.
+
+## Browser build (WebAssembly)
+
+The `keymano-wasm` crate wraps `keymano-session` with a wasm-bindgen interface
+and compiles to `src/wasm/` via wasm-pack. Two additional direct runtime deps
+are included in every browser load:
+
+| Crate | License | Upstream |
+| --- | --- | --- |
+| `wasm-bindgen` 0.2 | MIT OR Apache-2.0 | https://github.com/rustwasm/wasm-bindgen |
+| `console_error_panic_hook` 0.1 | MIT | https://github.com/rustwasm/console_error_panic_hook |
+
+The `keymano-wasm` crate itself shares the core and session deps listed above.
+The desktop app does not load the wasm payload (dynamic import skipped on Tauri).
 
 ## MPL-2.0 dependencies (file-level weak copyleft)
 
