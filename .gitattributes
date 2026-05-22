@@ -1,0 +1,32 @@
+# Normalize line endings to LF on commit; auto-detect text.
+* text=auto eol=lf
+
+# Explicit text types.
+*.rs        text
+*.ts        text
+*.tsx       text
+*.js        text
+*.json      text
+*.css       text
+*.html      text
+*.md        text
+*.yml       text
+*.yaml      text
+*.toml      text
+*.svg       text
+*.keylayout text
+Cargo.lock  text -diff
+pnpm-lock.yaml text -diff
+
+# Binary assets — never normalize or diff.
+*.png   binary
+*.ico   binary
+*.icns  binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.woff2 binary
+
+# Keep generated/vendored paths out of language stats and diffs.
+src/locales/**      linguist-detectable=false
+docs/screenshots/** linguist-documentation

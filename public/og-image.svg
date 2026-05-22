@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d140c"/>
+      <stop offset="1" stop-color="#0c0805"/>
+    </linearGradient>
+    <linearGradient id="or" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0ad53"/>
+      <stop offset="1" stop-color="#d96f1f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="26%" cy="46%" r="40%">
+      <stop offset="0" stop-color="#e8943a" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#e8943a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3c2c1c"/>
+      <stop offset="1" stop-color="#241a10"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7eedd"/>
+      <stop offset="1" stop-color="#e8c79a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- emblem: keyboard plate over dim embossed caps -->
+  <g transform="translate(110 175) scale(2.8)"
+     font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="800" text-anchor="middle">
+    <g fill="url(#cap)" opacity="0.55">
+      <g transform="translate(12 14) rotate(-13)"><rect x="-10" y="-10" width="20" height="20" rx="4.4"/></g>
+      <g transform="translate(90 18) rotate(12)"><rect x="-10" y="-10" width="20" height="20" rx="4.4"/></g>
+      <g transform="translate(7 45) rotate(-8)"><rect x="-9" y="-9" width="18" height="18" rx="4"/></g>
+      <g transform="translate(94 48) rotate(9)"><rect x="-9" y="-9" width="18" height="18" rx="4"/></g>
+      <g transform="translate(14 82) rotate(11)"><rect x="-10" y="-10" width="20" height="20" rx="4.4"/></g>
+      <g transform="translate(91 78) rotate(-11)"><rect x="-10.5" y="-10.5" width="21" height="21" rx="4.6"/></g>
+    </g>
+    <rect x="13" y="29" width="74" height="44" rx="10" fill="#1b120b" stroke="url(#or)" stroke-width="3"/>
+    <g fill="url(#or)">
+      <rect x="24" y="42" width="8" height="7" rx="2"/>
+      <rect x="34" y="42" width="8" height="7" rx="2"/>
+      <rect x="44" y="42" width="8" height="7" rx="2"/>
+      <rect x="54" y="42" width="8" height="7" rx="2"/>
+      <rect x="64" y="42" width="8" height="7" rx="2"/>
+      <rect x="29" y="52" width="8" height="7" rx="2"/>
+      <rect x="39" y="52" width="8" height="7" rx="2"/>
+      <rect x="49" y="52" width="8" height="7" rx="2"/>
+      <rect x="59" y="52" width="8" height="7" rx="2"/>
+      <rect x="36" y="62" width="28" height="7" rx="2"/>
+    </g>
+  </g>
+
+  <!-- text block -->
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+    <text x="454" y="248" font-size="112" font-weight="800" fill="url(#word)">Keymano</text>
+    <text x="458" y="310" font-size="38" font-weight="600" fill="#eca64f">Keyboard-layout editor for macOS</text>
+    <text x="458" y="368" font-size="27" font-weight="500" fill="#c2b393">Edit .keylayout &amp; .bundle — a Ukelele alternative</text>
+    <text x="458" y="410" font-size="25" font-weight="500" fill="#8d7e62">macOS · Windows · Linux · Browser · 24 languages</text>
+    <g transform="translate(458 462)">
+      <rect x="0" y="0" width="330" height="56" rx="28" fill="#1b120b" stroke="url(#or)" stroke-width="2"/>
+      <text x="165" y="37" font-size="27" font-weight="700" fill="#f0ad53" text-anchor="middle">keymano.ys.contact</text>
+    </g>
+  </g>
+</svg>

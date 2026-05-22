@@ -1,0 +1,7 @@
+# Keymano security policy — https://github.com/ysalitrynskyi/keymano/blob/main/SECURITY.md
+Contact: https://github.com/ysalitrynskyi/keymano/security/advisories/new
+Contact: mailto:ysalitrynskyi+keymano@gmail.com
+Policy: https://github.com/ysalitrynskyi/keymano/blob/main/SECURITY.md
+Preferred-Languages: en
+Canonical: https://keymano.ys.contact/.well-known/security.txt
+Expires: 2027-05-21T00:00:00.000Z

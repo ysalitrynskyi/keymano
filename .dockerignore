@@ -1,0 +1,33 @@
+# Build outputs / deps — regenerated inside the image.
+node_modules
+dist
+dist-ssr
+coverage
+.pnpm-store
+
+# Rust build artifacts (huge). Note: crates/ source is KEPT — core.Dockerfile
+# needs it; only the compiled target/ dirs are excluded.
+target
+**/target
+**/*.rs.bk
+
+# Tauri desktop shell — not needed by the web image or the core tests.
+src-tauri
+
+# VCS / CI / editor / OS cruft.
+.git
+.github
+.idea
+.vscode
+.cursor
+.claude
+.DS_Store
+Thumbs.db
+
+# Docker meta (don't ship the build files into their own context).
+.dockerignore
+docker-compose*.yml
+
+# Misc
+*.log
+*.local
