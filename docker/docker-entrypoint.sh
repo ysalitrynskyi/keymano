@@ -13,11 +13,15 @@
 # no cookie. Toggle it by setting the env var and restarting the container.
 set -eu
 
-TMPL_CONF="/etc/keymano/nginx.conf.tmpl"
-OUT_CONF="/etc/nginx/conf.d/default.conf"
-TMPL_HTML="/etc/keymano/index.html.tmpl"
-OUT_HTML="/usr/share/nginx/html/index.html"
-ANALYTICS_JS="/usr/share/nginx/html/analytics.js"
+# Paths default to the in-container locations; the KEYMANO_* / NGINX_BIN
+# overrides exist only so the rendering logic can be exercised in a test
+# harness (see src/test/deploy-csp.test.ts). They are never set in the image,
+# so container behaviour is unchanged.
+TMPL_CONF="${KEYMANO_TMPL_CONF:-/etc/keymano/nginx.conf.tmpl}"
+OUT_CONF="${KEYMANO_OUT_CONF:-/etc/nginx/conf.d/default.conf}"
+TMPL_HTML="${KEYMANO_TMPL_HTML:-/etc/keymano/index.html.tmpl}"
+OUT_HTML="${KEYMANO_OUT_HTML:-/usr/share/nginx/html/index.html}"
+ANALYTICS_JS="${KEYMANO_ANALYTICS_JS:-/usr/share/nginx/html/analytics.js}"
 SNIPPET="$(mktemp)"
 trap 'rm -f "$SNIPPET"' EXIT
 
@@ -56,6 +60,22 @@ else
     : > "$SNIPPET"
 fi
 
+# Cloudflare Web Analytics: when the site is fronted by Cloudflare with
+# automatic RUM enabled, the CF edge injects beacon.min.js into the response
+# *after* it leaves nginx (we never add it to the HTML). That script — and the
+# data POST it makes — needs the CF origins allowed in the CSP, otherwise the
+# browser blocks it and logs a console error. Off by default to preserve the
+# same-origin promise; set CLOUDFLARE_WEB_ANALYTICS to a non-empty value on a
+# Cloudflare-fronted deployment to allow the beacon. (If you'd rather not run
+# CF analytics at all, leave this unset and disable the automatic beacon in the
+# Cloudflare Web Analytics dashboard instead.)
+CF="${CLOUDFLARE_WEB_ANALYTICS:-}"
+if [ -n "$CF" ]; then
+    echo "keymano: Cloudflare Web Analytics CSP allowance ENABLED."
+    CSP_SCRIPT="${CSP_SCRIPT:+$CSP_SCRIPT }https://static.cloudflareinsights.com"
+    CSP_CONNECT="${CSP_CONNECT:+$CSP_CONNECT }https://cloudflareinsights.com"
+fi
+
 # Render the nginx conf (# delimiter — the substituted values contain '/').
 sed -e "s#__CSP_SCRIPT_EXTRA__#${CSP_SCRIPT}#g" \
     -e "s#__CSP_CONNECT_EXTRA__#${CSP_CONNECT}#g" \
@@ -70,6 +90,6 @@ awk -v f="$SNIPPET" '
 ' "$TMPL_HTML" > "$OUT_HTML"
 
 # Fail fast on a malformed conf rather than serving a broken site.
-nginx -t
+"${NGINX_BIN:-nginx}" -t
 
 exec "$@"

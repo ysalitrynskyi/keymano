@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] — 2026-05-22
+
+### Fixed
+- **The hosted/self-hosted web build couldn't load at all.** The nginx
+  Content-Security-Policy `script-src` had no `'wasm-unsafe-eval'`, so the
+  browser blocked every `WebAssembly.compile`/`instantiate*` call and the Rust
+  core (now compiled to wasm) never started — opening a `.keylayout` threw
+  `CompileError: ... violates the following Content Security Policy directive`.
+  `'wasm-unsafe-eval'` is now in `script-src`; it permits *only* wasm
+  compilation and does **not** enable JS `eval()` (`'unsafe-eval'` stays
+  blocked). The desktop app is unaffected (it never loads the wasm payload).
+
+### Deployment
+- **Cloudflare Web Analytics beacon** is no longer a hard CSP error on
+  CF-fronted instances. A new optional `CLOUDFLARE_WEB_ANALYTICS` env var
+  (off by default, like `GA_MEASUREMENT_ID`) widens the CSP to allow the
+  edge-injected `static.cloudflareinsights.com` beacon; leave it unset (the
+  default same-origin CSP) and the beacon stays blocked. Wired through
+  `docker-compose.prod.yml` and documented in `.env.example`.
+
 ## [0.2.0] — 2026-05-22
 
 ### Changed
@@ -179,5 +199,6 @@ runs on macOS, Windows, Linux, and in the browser.
 - Repo hygiene: `.editorconfig`, `.gitattributes`, `.nvmrc`, `engines`, a
   `NOTICE` file, and ESM-correct `vite.config.ts`.
 
+[0.2.1]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.1
 [0.2.0]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.1.0

@@ -1695,7 +1695,7 @@ dependencies = [
 
 [[package]]
 name = "keylayout-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "insta",
  "plist",
@@ -1707,7 +1707,7 @@ dependencies = [
 
 [[package]]
 name = "keymano"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "keylayout-core",
  "keymano-session",
@@ -1721,7 +1721,7 @@ dependencies = [
 
 [[package]]
 name = "keymano-session"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "keylayout-core",
  "serde",
@@ -1729,7 +1729,7 @@ dependencies = [
 
 [[package]]
 name = "keymano-wasm"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "console_error_panic_hook",
  "keylayout-core",

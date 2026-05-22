@@ -25,6 +25,11 @@
 #                       (default) serves a same-origin, cookie-free page with no
 #                       analytics. Set it + restart to inject the Google tag and
 #                       widen the CSP to Google's analytics origins.
+#   CLOUDFLARE_WEB_ANALYTICS - set to 1 if this Cloudflare tunnel/zone has
+#                       automatic Web Analytics on (the CF edge injects its
+#                       beacon). Empty/unset (default) keeps the CSP same-origin
+#                       and the beacon is blocked. Set it + restart to allow the
+#                       CF beacon origins in the CSP.
 #
 # Cloudflare Tunnel route (configure in the Zero Trust dashboard):
 #   - keymano.ys.contact -> http://keymano:80
@@ -60,6 +65,7 @@ services:
     # restarting the container.
     environment:
       GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+      CLOUDFLARE_WEB_ANALYTICS: ${CLOUDFLARE_WEB_ANALYTICS:-}
     logging: *default-logging
     # Ephemeral, RAM-backed, size-capped scratch — nothing here survives a
     # restart, so transient files can't accumulate on the host disk.
