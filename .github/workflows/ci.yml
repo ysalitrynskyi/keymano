@@ -120,7 +120,7 @@ jobs:
           tags: |
             type=sha,prefix=
             type=raw,value=latest
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/web-prod.Dockerfile
@@ -163,7 +163,7 @@ jobs:
             # recent stable build (matches the prerelease handling in
             # create-release below and GitHub's own "Latest release" semantics).
             type=raw,value=latest,enable=${{ !contains(github.ref, '-') }}
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/web-prod.Dockerfile
