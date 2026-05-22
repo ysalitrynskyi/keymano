@@ -4,6 +4,54 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — 2026-05-22
+
+### Changed
+- **The browser build now runs the real Rust core, compiled to WebAssembly.**
+  The hand-written JavaScript stand-in is gone; a new crate `keymano-wasm` wraps
+  `keymano-session` (the same command surface the desktop app drives) and is
+  built to `src/wasm` with `wasm-pack`. Parsing, serialization, validation, and
+  modifier/dead-key/base-map resolution are now identical in the browser and on
+  the desktop — one engine, no second implementation to drift.
+  - This corrects two long-standing browser-only inaccuracies the stand-in had:
+    inherited (base-map) layers now resolve exactly as macOS does (an empty
+    absolute layer no longer fabricates a base-map fallback), and opening an
+    unparseable file now reports an error instead of silently inventing a doc.
+  - The desktop app is unchanged (it still calls the core over Tauri IPC) and
+    does not ship the wasm payload (it's loaded via a dynamic import).
+- `ids::random_keyboard_id` no longer reads the system clock (which traps on
+  `wasm32`); it mixes a wall-clock seed, where available, with a process counter
+  so ids minted in one session stay unique on every platform.
+
+### Fixed
+- **Bundle page** showed a fabricated `com.apple.keyboardlayout.<name>`
+  identifier that used Apple's reserved namespace and didn't match the id
+  actually written to the `.bundle` (`app.keymano.layouts.<slug>`); it now
+  displays the real identifier with the same slug rules as the core writer.
+- **XML & Validation** kept showing the pre-repair XML after an in-place
+  *Repair* (the fetch effect's dependencies were unchanged); the preview now
+  refetches after repairing.
+- **Dead Keys** terminator field saved on every blur, creating empty undo steps
+  and marking the document dirty even when nothing changed; it now saves only on
+  a real change.
+- **Browser shortcuts** (undo/redo/zoom) hijacked `⌘/Ctrl`-combos while the user
+  was typing in a field; accelerators are now ignored for editable targets.
+- **`validate::repair`** flagged `MissingSpecialKeyOutput` as auto-fixable but
+  injected the special-key output only into an index-0 absolute map, so a set
+  whose absolute map sat at a non-zero index stayed broken; repair (and
+  `add_special_keys`) now target the lowest-index absolute map of each set.
+- **Housekeeping** (remove unused states/actions, add special keys) and repair
+  recorded an undo step and dirtied the document even when they changed nothing;
+  they now commit only when something actually changed.
+
+### Deployment
+- `docker-compose.prod.yml`: the Cloudflare Tunnel now waits for the web
+  container's healthcheck (`depends_on: condition: service_healthy`) before
+  starting, eliminating the brief boot-time 502 while nginx is still coming up.
+- The web image (`docker/web-prod.Dockerfile`) builds the wasm core in a
+  dedicated Rust stage; CI's frontend, Tauri, and desktop-release jobs install
+  the `wasm32` target + `wasm-pack`.
+
 ## [0.1.0] — 2026-05-22
 
 First public release: a free, open-source, cross-platform editor for macOS
@@ -131,4 +179,5 @@ runs on macOS, Windows, Linux, and in the browser.
 - Repo hygiene: `.editorconfig`, `.gitattributes`, `.nvmrc`, `engines`, a
   `NOTICE` file, and ESM-correct `vite.config.ts`.
 
+[0.2.0]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.1.0

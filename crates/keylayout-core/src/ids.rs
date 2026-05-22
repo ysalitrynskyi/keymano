@@ -95,13 +95,32 @@ pub fn id_in_range(script: Script, n: u64) -> i32 {
     lo + (n % span) as i32
 }
 
-/// Generate a pseudo-random id within a script's valid range.
-/// Uses a time-seeded LCG; collision risk is negligible for authoring.
+/// Wall-clock nanoseconds as a seed, where available. `SystemTime::now()` traps
+/// on `wasm32-unknown-unknown` (no clock), so the wasm build seeds from the
+/// constant only and relies on the process-global counter below for uniqueness.
+fn time_seed() -> u64 {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos() as u64)
+            .unwrap_or(0x9E3779B97F4A7C15)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        0x9E3779B97F4A7C15
+    }
+}
+
+/// Generate a pseudo-random id within a script's valid range. Mixes a
+/// wall-clock seed (when available) with a monotonic process counter, so two
+/// ids minted in the same session always differ — including in wasm, where
+/// there is no clock. Collision risk across separate runs is negligible for
+/// authoring.
 pub fn random_keyboard_id(script: Script) -> i32 {
-    let seed = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_nanos() as u64)
-        .unwrap_or(0x9E3779B97F4A7C15);
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let seed = time_seed() ^ COUNTER.fetch_add(0x9E3779B97F4A7C15, Ordering::Relaxed);
     // splitmix64 step for good dispersion
     let mut z = seed.wrapping_add(0x9E3779B97F4A7C15);
     z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);

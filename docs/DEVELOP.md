@@ -16,26 +16,43 @@ for user-facing copy. Implementation notes should cite Apple's public
 ```
 crates/keylayout-core   model, parse, serialize, modifiers, resolve, validate, bundle
 crates/keymano-session  document session + undo/redo (no Tauri)
+crates/keymano-wasm     wasm-bindgen wrapper over the session → the browser build
 src-tauri               thin Tauri command shell
 src                     React UI, ipc, i18n
 src/assets/keyboards    ANSI / ISO / JIS geometry presets (JSON)
 ```
 
-The Rust core has no UI dependencies. Desktop and web builds share the same format logic.
+The Rust core has no UI dependencies. Desktop and web builds run the **same**
+format logic: the desktop app calls it over Tauri IPC, the browser build runs it
+compiled to WebAssembly (`crates/keymano-wasm` → `src/wasm`, via `pnpm wasm:build`).
+
+## Prerequisites
+
+[Rust](https://rustup.rs/) (stable) with the wasm target + [wasm-pack](https://rustwasm.github.io/wasm-pack/),
+plus Node 20+ and pnpm:
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+corepack enable
+```
 
 ## Run locally
 
 ```bash
 pnpm install
-pnpm dev          # browser UI via web-mock (no Rust) — fastest loop
+pnpm dev          # browser UI — builds the wasm core, then Vite (fastest loop)
 pnpm tauri dev    # full desktop app
 ```
+
+`pnpm dev`, `pnpm build`, and `pnpm test` each run `pnpm wasm:build` first, so the
+browser build always exercises the real core.
 
 ## Tests & lint (before a PR)
 
 ```bash
 pnpm lint
-pnpm exec tsc -b
+pnpm wasm:build && pnpm exec tsc -b                # tsc needs the generated src/wasm types
 pnpm test                                          # vitest (frontend + locale parity)
 cargo test -p keylayout-core -p keymano-session
 cargo clippy --workspace --all-targets -- -D warnings

@@ -1,0 +1,28 @@
+[package]
+name = "keymano-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+# cdylib for the wasm artifact; rlib so the crate still builds/lints/tests as a
+# normal library on the host (`cargo test --workspace`, clippy).
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+keylayout-core = { path = "../keylayout-core" }
+keymano-session = { path = "../keymano-session" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"
+
+# The wasm-opt bundled with this wasm-pack rejects the bulk-memory ops LLVM
+# emits (memory.fill); skip it. Vite/brotli still compress the artifact well.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false

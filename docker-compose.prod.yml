@@ -29,8 +29,9 @@
 # Cloudflare Tunnel route (configure in the Zero Trust dashboard):
 #   - keymano.ys.contact -> http://keymano:80
 #
-# This serves the in-browser build of Keymano (the full UI against an in-memory
-# mock backend). The native desktop app is downloaded from Releases, not here.
+# This serves the in-browser build of Keymano (the full UI backed by the Rust
+# core compiled to WebAssembly). The native desktop app is downloaded from
+# Releases, not here.
 
 # Cap container log growth so it can never fill the host disk over time
 # (Docker's default json-file driver is unbounded). ~30 MB max per service.
@@ -85,8 +86,12 @@ services:
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     logging: *default-logging
+    # Wait until the web container passes its healthcheck before bringing the
+    # tunnel up, so the public hostname never serves a boot-time 502 while nginx
+    # is still starting.
     depends_on:
-      - keymano
+      keymano:
+        condition: service_healthy
     networks:
       - keymano-network
 

@@ -108,6 +108,9 @@ export function DeadKeysPage() {
                         aria-label={`${t("deadkeys.terminator")} ${s}`}
                         className="h-8 w-40"
                         onBlur={async (e) => {
+                          // Skip when unchanged so tabbing through fields can't
+                          // create empty undo steps or spuriously dirty the doc.
+                          if (e.target.value === terminatorFor(s)) return;
                           await ipc.setTerminator(activeDocId, kbIndex, s, e.target.value);
                           await afterEdit();
                         }}

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ipc } from "./ipc";
 
-describe("ipc web-mock backend", () => {
+describe("ipc web backend", () => {
   it("reports non-tauri runtime", async () => {
     expect(ipc.isTauri).toBe(false);
     expect(await ipc.ping()).toBe("pong");
@@ -33,14 +33,14 @@ describe("ipc web-mock backend", () => {
     expect(docs.find((d) => d.id === dup.id)).toBeTruthy();
   });
 
-  it("openContent extracts the name attr and falls back to 'Imported'", async () => {
+  it("openContent parses the real layout name; rejects unparseable input", async () => {
     const named = await ipc.openContent(
-      '<keyboard group="0" id="-5" name="My KB"><keyMapSet id="ANSI"><keyMap index="0"><key code="0" output="a"/></keyMap></keyMapSet></keyboard>',
+      '<keyboard group="0" id="-5" name="My KB"><layouts><layout first="0" last="17" modifiers="M" mapSet="ANSI"/></layouts><modifierMap id="M" defaultIndex="0"><keyMapSelect mapIndex="0"><modifier keys=""/></keyMapSelect></modifierMap><keyMapSet id="ANSI"><keyMap index="0"><key code="0" output="a"/></keyMap></keyMapSet></keyboard>',
     );
     expect(named.name).toBe("My KB");
-    // unparseable input → fallback name, still yields a usable Standard doc
-    const fallback = await ipc.openContent("not a keylayout at all");
-    expect(fallback.name).toBe("Imported");
+    // The real core rejects junk rather than silently inventing a doc — the
+    // store wraps this in guard() and surfaces an error toast.
+    await expect(ipc.openContent("not a keylayout at all")).rejects.toBeTruthy();
   });
 
   it("saveFileDialog downloads a real .keylayout in the browser", async () => {

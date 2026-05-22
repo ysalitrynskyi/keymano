@@ -1,17 +1,21 @@
-// The bundled examples must also import through the *web* path (DOMParser →
-// MockBackend), since "File → Open…" in the browser build round-trips a
-// .keylayout exactly this way. Reads the real files from examples/.
+// The bundled examples must import through the *web* path too, since
+// "File → Open…" in the browser build round-trips a .keylayout this way. The
+// web path now runs the real Rust core (keylayout-core via wasm), so this also
+// confirms the actual parser handles the shipped files. Reads them from examples/.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { MockBackend } from "./mock-core";
+import { WasmBackend } from "./wasm-core";
+import { ensureWasm } from "@/test/wasm";
 
 const examplesDir = join(dirname(fileURLToPath(import.meta.url)), "../../examples");
 const files = readdirSync(examplesDir).filter((f) => f.endsWith(".keylayout"));
+
+beforeAll(() => ensureWasm());
 
 describe("web import of bundled examples", () => {
   it("ships several example layouts", () => {
@@ -19,29 +23,24 @@ describe("web import of bundled examples", () => {
   });
 
   for (const file of files) {
-    it(`imports ${file} via the browser DOMParser path`, () => {
+    it(`imports ${file} through the wasm core`, async () => {
       const xml = readFileSync(join(examplesDir, file), "utf8");
-      const m = new MockBackend();
-      const doc = m.openKeylayout(xml, "Fallback");
+      const m = new WasmBackend();
+      const doc = await m.openKeylayout(xml);
 
-      // Parsed into a real document with a name and at least one keyboard.
       expect(doc.name.length).toBeGreaterThan(0);
       expect(doc.keyboard_names.length).toBeGreaterThan(0);
 
-      // The base snapshot has populated keys (the layout actually has content).
-      const snap = m.getSnapshot(doc.id, 0, 0, 0, "none");
+      const snap = await m.getSnapshot(doc.id, 0, 0, 0, "none");
       const outputs = snap.keys.filter((k) => (k.output ?? "").length > 0);
       expect(outputs.length).toBeGreaterThan(20);
     });
   }
 
-  // Regression: Apple-format `.keylayout` files declare XML 1.1 and encode
+  // Apple-format `.keylayout` files declare XML 1.1 and encode
   // Backspace/Escape/F-key outputs as `&#x000N;` char refs (forbidden in
-  // XML 1.0). Earlier the mock parser handed the raw file to DOMParser, which
-  // bailed in Chromium/WebKit/Edge, breaking File→Open in the hosted build.
-  // The importer must now normalise both — verify with a synthetic minimal
-  // file and one of the real bundled examples that uses the same chars.
-  it("imports XML-1.1 with C0 control char refs (Apple format)", () => {
+  // XML 1.0). The real core parses both directly — no DOMParser workaround.
+  it("imports XML-1.1 with C0 control char refs (Apple format)", async () => {
     const xml =
       `<?xml version="1.1" encoding="UTF-8"?>\n` +
       `<!DOCTYPE keyboard PUBLIC "-//Apple//DTD Keyboard Layout//EN" "file://localhost/System/Library/DTDs/KeyboardLayout.dtd">\n` +
@@ -51,12 +50,12 @@ describe("web import of bundled examples", () => {
       `  <keyMapSet id="ANSI"><keyMap index="0">` +
       `<key code="51" output="&#x0008;"/>` + // Backspace = U+0008
       `<key code="53" output="&#x001B;"/>` + // Escape = U+001B
-      `<key code="48" output="&#x0009;"/>` + // Tab (allowed in 1.0)
+      `<key code="48" output="&#x0009;"/>` + // Tab
       `<key code="0" output="a"/></keyMap></keyMapSet>\n` +
       `</keyboard>`;
-    const m = new MockBackend();
-    const doc = m.openKeylayout(xml, "Fallback");
-    const snap = m.getSnapshot(doc.id, 0, 0, 0, "none");
+    const m = new WasmBackend();
+    const doc = await m.openKeylayout(xml);
+    const snap = await m.getSnapshot(doc.id, 0, 0, 0, "none");
     const out = (code: number) => snap.keys.find((k) => k.code === code)?.output;
     expect(out(0)).toBe("a");
     expect(out(48)).toBe("\u0009");

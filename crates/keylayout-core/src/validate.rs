@@ -365,14 +365,20 @@ pub fn repair(kb: &mut Keyboard) -> RepairReport {
         fixed.push("InvalidKeyboardID".into());
     }
 
-    // MissingSpecialKeyOutput → inject into absolute base maps
+    // MissingSpecialKeyOutput → inject into the lowest-index absolute map of
+    // each set. `validate` flags a set when NO map defines the specials, so the
+    // fix must land in some absolute map regardless of its index (index 0 isn't
+    // guaranteed to exist), otherwise the "auto_fixable" promise is broken.
     for set in &mut kb.keymap_sets {
-        for map in &mut set.maps {
-            if map.base.is_none() && map.index == 0 {
-                let added = add_special_key_output(map);
-                if added > 0 {
-                    fixed.push("MissingSpecialKeyOutput".into());
-                }
+        if let Some(map) = set
+            .maps
+            .iter_mut()
+            .filter(|m| m.base.is_none())
+            .min_by_key(|m| m.index)
+        {
+            let added = add_special_key_output(map);
+            if added > 0 {
+                fixed.push("MissingSpecialKeyOutput".into());
             }
         }
     }
@@ -554,6 +560,44 @@ mod tests {
         // idempotent
         let r2 = repair(&mut kb);
         assert!(!r2.fixed.contains(&"MissingSpecialKeyOutput".to_string()));
+    }
+
+    #[test]
+    fn repair_special_output_into_nonzero_absolute_map() {
+        // A set whose only absolute map is at a non-zero index must still get
+        // its specials injected — otherwise the auto-fixable flag is a lie.
+        let mut kb = Keyboard {
+            group: 1,
+            id: -15000,
+            name: "T".into(),
+            maxout: None,
+            layouts: vec![],
+            modifier_maps: vec![],
+            keymap_sets: vec![KeyMapSet {
+                id: "ANSI".into(),
+                maps: vec![KeyMap {
+                    index: 1,
+                    base: None,
+                    keys: vec![Key {
+                        code: 0,
+                        value: KeyValue::Output("a".into()),
+                    }],
+                }],
+            }],
+            actions: vec![],
+            terminators: vec![],
+            comments: Comments::default(),
+        };
+        assert!(validate(&kb)
+            .iter()
+            .any(|i| i.code == "MissingSpecialKeyOutput"));
+        let report = repair(&mut kb);
+        assert!(report
+            .fixed
+            .contains(&"MissingSpecialKeyOutput".to_string()));
+        assert!(!validate(&kb)
+            .iter()
+            .any(|i| i.code == "MissingSpecialKeyOutput"));
     }
 
     #[test]

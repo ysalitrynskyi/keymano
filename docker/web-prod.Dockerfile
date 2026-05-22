@@ -1,30 +1,46 @@
 # syntax=docker/dockerfile:1
-# Production web image: compiles the static frontend (ipc web-mock, no Rust) and
-# serves it with nginx. This is the "deploy the app to the web" target and the
-# image published to GHCR by CI — the full UI runs in any browser against the
-# in-browser mock backend, so it hosts anywhere that serves static files.
+# Production web image: compiles the static frontend and serves it with nginx.
+# The browser build runs the REAL keylayout-core compiled to WebAssembly (no JS
+# stand-in), so a dedicated Rust stage builds the wasm artifact first and the
+# Node stage consumes it. This is the image published to GHCR by CI.
 #
-# The build stage is pinned to the *build host* arch ($BUILDPLATFORM): the
-# output is plain static files (arch-independent), so multi-arch images don't
-# pay a QEMU/npm penalty — only the small nginx runtime layer is per-target.
+# Both build stages are pinned to the *build host* arch ($BUILDPLATFORM): the
+# wasm and the static bundle are arch-independent, so multi-arch images don't
+# pay a QEMU penalty — only the small nginx runtime layer is per-target.
 
 ARG BUILDPLATFORM
-FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS build
 
+# ── Build the wasm core ──────────────────────────────────────────────────────
+FROM --platform=$BUILDPLATFORM rust:1-bookworm AS wasm
+RUN rustup target add wasm32-unknown-unknown \
+ && cargo install wasm-pack --version 0.15.0 --locked
+WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+# Drop the Tauri shell member so no system WebView is needed to resolve the
+# workspace (the wasm crate only depends on the pure core + session). Same strip
+# as docker/core.Dockerfile; `cargo metadata` below fails loudly if it misfires.
+RUN set -eux; \
+    sed -i -E \
+        -e 's/[[:space:]]*,[[:space:]]*"src-tauri"//g' \
+        -e '/^[[:space:]]*"src-tauri"[[:space:]]*,?[[:space:]]*$/d' \
+        -e 's/"src-tauri"[[:space:]]*,[[:space:]]*//g' \
+        Cargo.toml; \
+    cargo metadata --format-version 1 --no-deps >/dev/null
+RUN wasm-pack build crates/keymano-wasm --target web --out-dir /pkg --out-name keymano_wasm
+
+# ── Build the static frontend ────────────────────────────────────────────────
+FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS build
 WORKDIR /app
 ENV CI=1
-
-# pnpm 10 (matches CI + pnpm-lock.yaml lockfileVersion 9.0). npm resolves the
-# latest 10.x, so no corepack `packageManager` pin is required.
 RUN npm install -g pnpm@10
-
-# Install deps first for layer caching.
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
-
-# Build the web bundle: `tsc -b && vite build` → /app/dist.
 COPY . .
-RUN pnpm build
+# Drop in the prebuilt wasm artifact (the `wasm:build` script needs Rust, which
+# this Node stage doesn't have) and compile the bundle directly.
+COPY --from=wasm /pkg ./src/wasm
+RUN pnpm exec tsc -b && pnpm exec vite build
 
 # ── Serve: static files behind nginx ─────────────────────────────────────────
 FROM nginx:1.27-alpine AS serve

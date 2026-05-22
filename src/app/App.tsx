@@ -157,10 +157,14 @@ export function App() {
   // keyboard shortcuts
   React.useEffect(() => {
     // On desktop the native menu owns these accelerators; only bind them in
-    // the browser (web-mock) to avoid firing actions twice.
+    // the browser to avoid firing actions twice.
     if (ipc.isTauri) return;
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return;
+      // Don't hijack accelerators while the user is typing — let the focused
+      // field handle its own undo/redo and caret editing.
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
       if (e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         void undo();

@@ -121,6 +121,17 @@ impl DocEntry {
         self.last_action = Some(action.to_string());
     }
 
+    /// Record an already-captured pre-mutation snapshot onto the undo stack.
+    /// For operations that may be a no-op (housekeeping/repair): clone first,
+    /// run the op, and only call this when something actually changed, so a
+    /// "nothing to do" click can't create an empty undo step or dirty the doc.
+    fn commit_undo(&mut self, before: Document, action: &str) {
+        self.undo.push(before);
+        self.redo.clear();
+        self.dirty = true;
+        self.last_action = Some(action.to_string());
+    }
+
     /// Recompute dirty by comparing the current document to the saved content.
     fn recompute_dirty(&mut self) {
         self.dirty = self.saved_doc.as_ref() != Some(&self.document);
@@ -526,9 +537,12 @@ impl AppState {
 
     pub fn repair(&mut self, id: u32, kb_index: usize) -> Result<Vec<String>> {
         let entry = self.entry_mut(id)?;
-        entry.push_undo("Repair");
-        let kb = entry.keyboard_mut(kb_index)?;
-        Ok(repair(kb).fixed)
+        let before = entry.document.clone();
+        let fixed = repair(entry.keyboard_mut(kb_index)?).fixed;
+        if !fixed.is_empty() {
+            entry.commit_undo(before, "Repair");
+        }
+        Ok(fixed)
     }
 
     // ---- dead-key / action editing (P5) ----
@@ -599,33 +613,44 @@ impl AppState {
     /// Remove states unreachable from `none`. Returns removed count.
     pub fn remove_unused_states(&mut self, id: u32, kb_index: usize) -> Result<usize> {
         let entry = self.entry_mut(id)?;
-        entry.push_undo("Remove unused states");
-        Ok(keylayout_core::validate::remove_unused_states(
-            entry.keyboard_mut(kb_index)?,
-        ))
+        let before = entry.document.clone();
+        let n = keylayout_core::validate::remove_unused_states(entry.keyboard_mut(kb_index)?);
+        if n > 0 {
+            entry.commit_undo(before, "Remove unused states");
+        }
+        Ok(n)
     }
 
     /// Remove actions not referenced by any key. Returns removed count.
     pub fn remove_unused_actions(&mut self, id: u32, kb_index: usize) -> Result<usize> {
         let entry = self.entry_mut(id)?;
-        entry.push_undo("Remove unused actions");
-        Ok(keylayout_core::validate::remove_unused_actions(
-            entry.keyboard_mut(kb_index)?,
-        ))
+        let before = entry.document.clone();
+        let n = keylayout_core::validate::remove_unused_actions(entry.keyboard_mut(kb_index)?);
+        if n > 0 {
+            entry.commit_undo(before, "Remove unused actions");
+        }
+        Ok(n)
     }
 
-    /// Inject default special-key control-char output into absolute base maps.
+    /// Inject default special-key control-char output into the lowest-index
+    /// absolute map of each set (mirrors `validate::repair`'s targeting).
     pub fn add_special_keys(&mut self, id: u32, kb_index: usize) -> Result<usize> {
         let entry = self.entry_mut(id)?;
-        entry.push_undo("Add special key output");
+        let before = entry.document.clone();
         let kb = entry.keyboard_mut(kb_index)?;
         let mut added = 0;
         for set in &mut kb.keymap_sets {
-            for map in &mut set.maps {
-                if map.base.is_none() && map.index == 0 {
-                    added += keylayout_core::special_keys::add_special_key_output(map);
-                }
+            if let Some(map) = set
+                .maps
+                .iter_mut()
+                .filter(|m| m.base.is_none())
+                .min_by_key(|m| m.index)
+            {
+                added += keylayout_core::special_keys::add_special_key_output(map);
             }
+        }
+        if added > 0 {
+            entry.commit_undo(before, "Add special key output");
         }
         Ok(added)
     }
@@ -848,6 +873,21 @@ mod tests {
         assert_eq!(state.remove_unused_actions(s.id, 0).unwrap(), 0);
         // standard template already has special keys → 0 added
         assert_eq!(state.add_special_keys(s.id, 0).unwrap(), 0);
+    }
+
+    #[test]
+    fn noop_housekeeping_does_not_dirty_or_record_undo() {
+        let mut state = AppState::new();
+        let s = state.new_document(Template::Standard, "T");
+        assert!(!state.summary(s.id).unwrap().dirty);
+        // Standard template: nothing unused, specials already present → all 0,
+        // and a 0-result op must not dirty the doc or push an undo step.
+        assert_eq!(state.remove_unused_states(s.id, 0).unwrap(), 0);
+        assert_eq!(state.remove_unused_actions(s.id, 0).unwrap(), 0);
+        assert_eq!(state.add_special_keys(s.id, 0).unwrap(), 0);
+        assert_eq!(state.repair(s.id, 0).unwrap().len(), 0);
+        assert!(!state.summary(s.id).unwrap().dirty);
+        assert!(state.undo_label(s.id).unwrap().is_none());
     }
 
     #[test]

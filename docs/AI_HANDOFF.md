@@ -10,20 +10,20 @@ For day-to-day commands see [DEVELOP.md](DEVELOP.md). For end users see [GETTING
 
 - **Product:** Cross-platform editor for macOS `.keylayout` XML and `.bundle` keyboard packages, with a live clickable keyboard (ANSI / ISO / JIS).
 - **Public positioning:** Open-source **Ukelele alternative** for Apple's `.keylayout` / `.bundle` formats. Keep this phrasing in user-facing discovery copy and trademark contexts.
-- **Stack:** Rust core (`keylayout-core`) + session (`keymano-session`) + Tauri shell + React/Vite UI. Browser build uses an in-memory IPC mock (not a second format implementation).
+- **Stack:** Rust core (`keylayout-core`) + session (`keymano-session`) + Tauri shell + React/Vite UI. The browser build runs the same core compiled to WebAssembly (`keymano-wasm`) — one format implementation everywhere, no JS reimplementation.
 - **Live:** https://keymano.ys.contact (Docker + Cloudflare Tunnel). **Repo:** https://github.com/ysalitrynskyi/keymano
 
 ---
 
-## Release / git state (as of v0.1.0)
+## Release / git state (as of v0.2.0)
 
 | Item | Value |
 |------|--------|
-| Version | `0.1.0` (`package.json`, tag `v0.1.0`) |
-| `main` baseline | `v0.1.0` release commit; later docs / maintenance commits may follow on top |
-| Release commit message | `feat: release Keymano v0.1.0` |
-| GitHub Release | Published with **10** desktop assets (dmg, msi, exe, deb, AppImage, tar.gz) |
-| Container image | `ghcr.io/ysalitrynskyi/keymano:0.1.0` (also `:0.1`, `:latest` per CI rules) |
+| Version | `0.2.0` (`package.json`, workspace `Cargo.toml`) |
+| `main` HEAD | latest `v*` release commit; doc / maintenance commits may follow on top |
+| Latest release commit | `feat: run the real Rust core in the browser via WebAssembly (v0.2.0)` |
+| Tag → release | Push an annotated `vX.Y.Z` tag on a `main` commit; CI builds desktop bundles + multi-arch web image and creates the GitHub Release |
+| Container image | `ghcr.io/ysalitrynskyi/keymano:<version>` (also `:<major>.<minor>`, `:latest` per CI rules; prerelease tags don't move `:latest`) |
 | CI on push/tag | `ci.yml` + `codeql.yml`; matrix macOS / Windows / Linux |
 
 Do not rewrite `main` history without maintainer approval.
@@ -72,13 +72,18 @@ Current canonical documents:
 |------|------|--------|
 | Format truth | `crates/keylayout-core/` | Parse, serialize, modifiers, dead keys, validate/repair, bundle |
 | Document + undo | `crates/keymano-session/` | No Tauri |
-| Desktop IPC | `src-tauri/src/commands.rs` | Thin layer |
-| UI | `src/` | Pages, keyboard, stores, `lib/ipc.ts` (tauri vs web-mock) |
+| Desktop IPC | `src-tauri/src/commands.rs` | Thin layer over the session |
+| Browser core | `crates/keymano-wasm/` | wasm-bindgen wrapper over the session; built to `src/wasm/` by `pnpm wasm:build` |
+| UI | `src/` | Pages, keyboard, stores, `lib/ipc.ts` (tauri IPC vs `lib/wasm-core.ts`) |
 | Geometry | `src/assets/keyboards/` | JSON presets, not KCAP binaries |
 | Locales | `src/locales/` | `en` + 23 langs; `locales.test.ts` enforces key parity |
-| E2E / UI dev | `pnpm dev` → `http://localhost:1420` | Web-mock backend |
+| E2E / UI dev | `pnpm dev` → `http://localhost:1420` | Real core via WebAssembly |
 
-**Rule:** Format changes belong in Rust core + golden/round-trip tests. The UI mock must not become a second source of truth (it only serves snapshot-shaped data).
+**Rule:** There is ONE format implementation — `keylayout-core`. The desktop app
+calls it over Tauri IPC; the browser runs it compiled to wasm. Format changes
+belong in the Rust core + golden/round-trip tests; never reintroduce a separate
+JS reimplementation. `src/wasm/` is a generated artifact (gitignored) — never
+edit it by hand or commit it.
 
 ---
 
@@ -86,14 +91,17 @@ Current canonical documents:
 
 ```bash
 pnpm install
-pnpm lint && pnpm exec tsc -b && pnpm test
+rustup target add wasm32-unknown-unknown && cargo install wasm-pack  # once
+pnpm lint && pnpm wasm:build && pnpm exec tsc -b && pnpm test   # wasm:build generates src/wasm types needed by tsc
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 pnpm build
 ```
 
-Expect ~129 Rust tests (workspace) and **136** vitest tests. CI also runs Playwright and coverage gates (core ≥90%, frontend ≥80%).
+Expect ~131 Rust tests (workspace) and **127** vitest tests (the web suite now
+drives the real core through wasm). CI also runs coverage gates (core ≥90%,
+frontend ≥80%).
 
 ---
 

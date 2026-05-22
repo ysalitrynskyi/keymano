@@ -33,8 +33,9 @@
 
 - `keylayout-core` — pure Rust: model, parse, serialize, modifier resolution, dead-key resolution, validation + repair, templates, ids, special keys, bundles. No UI, fully unit-tested.
 - `keymano-session` — Tauri-free document session (open docs, undo/redo, edits).
+- `keymano-wasm` — wasm-bindgen wrapper over the session; powers the browser build.
 - `src-tauri` — thin Tauri command shell over the session (desktop).
-- `src` — React + TypeScript frontend (clickable keyboard, pages, i18n). The browser build runs the full UI against an in-memory mock backend.
+- `src` — React + TypeScript frontend (clickable keyboard, pages, i18n). The browser build runs the same Rust core compiled to WebAssembly, so it matches the desktop app's parsing/serialization.
 
 ## Notes
 

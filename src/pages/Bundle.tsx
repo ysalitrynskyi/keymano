@@ -16,6 +16,12 @@ export function BundlePage() {
   const doc = docs.find((d) => d.id === activeDocId);
   if (!doc) return null;
 
+  // Mirror keylayout-core's bundle::from_keyboard slug: keep [A-Za-z0-9-],
+  // map everything else to '-', trim, fall back to "layout". Must match the
+  // identifier actually written to the .bundle so the UI doesn't mislead.
+  const slug = doc.name.replace(/[^A-Za-z0-9-]/g, "-").replace(/^-+|-+$/g, "") || "layout";
+  const identifier = `app.keymano.layouts.${slug}`;
+
   return (
     <div className="mx-auto max-w-2xl space-y-4" data-tour="tour-page">
       <div className="flex items-center justify-between">
@@ -58,7 +64,7 @@ export function BundlePage() {
         <div className="flex justify-between">
           <span className="text-[var(--text-muted)]">{t("bundle.identifier")}</span>
           <span dir="ltr" className="font-mono text-xs">
-            com.apple.keyboardlayout.{doc.name.replace(/[^A-Za-z0-9_-]/g, "")}
+            {identifier}
           </span>
         </div>
         <div className="flex justify-between">

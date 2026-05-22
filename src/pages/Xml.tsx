@@ -19,11 +19,16 @@ export function XmlPage() {
   const [xml, setXml] = React.useState("");
   const [codeNonAscii, setCodeNonAscii] = React.useState(false);
 
+  const loadXml = React.useCallback(async () => {
+    if (activeDocId == null) return;
+    setXml(await ipc.getXml(activeDocId, kbIndex, codeNonAscii));
+  }, [activeDocId, kbIndex, codeNonAscii]);
+
   React.useEffect(() => {
     if (activeDocId == null) return;
-    void ipc.getXml(activeDocId, kbIndex, codeNonAscii).then(setXml);
+    void loadXml();
     void refreshIssues();
-  }, [activeDocId, kbIndex, codeNonAscii, refreshIssues]);
+  }, [activeDocId, loadXml, refreshIssues]);
 
   if (activeDocId == null) return null;
 
@@ -64,7 +69,14 @@ export function XmlPage() {
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">{t("validation.title")}</h3>
           {issues.some((i) => i.auto_fixable) && (
-            <Button size="sm" variant="accent" onClick={() => void repair()}>
+            <Button
+              size="sm"
+              variant="accent"
+              onClick={async () => {
+                await repair();
+                await loadXml();
+              }}
+            >
               <Wrench size={14} />
               {t("validation.repair")}
             </Button>

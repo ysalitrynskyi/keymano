@@ -1,9 +1,9 @@
 // Typed command client (. Two backends chosen at runtime:
 //  - tauri: real invoke() when window.__TAURI_INTERNALS__ present.
-//  - web-mock: in-browser MockBackend for design review + e2e (no Rust).
+//  - web: real Rust core compiled to WebAssembly for the browser build.
 
 import i18n from "./i18n";
-import { MockBackend } from "./mock-core";
+import { WasmBackend } from "./wasm-core";
 import type {
   ActionsView,
   DocSummary,
@@ -21,10 +21,10 @@ const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window
 /** Discriminated union returned by installLayout. */
 export type InstallResult = { kind: "installed"; path: string } | { kind: "downloaded" };
 
-let mock: MockBackend | null = null;
-function getMock(): MockBackend {
-  if (!mock) mock = new MockBackend();
-  return mock;
+let web: WasmBackend | null = null;
+function getWeb(): WasmBackend {
+  if (!web) web = new WasmBackend();
+  return web;
 }
 
 async function invoke<T>(cmd: string, args: Record<string, unknown>): Promise<T> {
@@ -42,14 +42,13 @@ export const ipc = {
 
   async newDocument(template: TemplateName, name: string): Promise<DocSummary> {
     if (isTauri) return invoke("new_document", { template, name });
-    return getMock().newDocument(template, name);
+    return getWeb().newDocument(template, name);
   },
 
   async openContent(xml: string): Promise<DocSummary> {
     if (isTauri) return invoke("open_content", { xml });
-    // web: real best-effort import of the .keylayout via DOMParser
-    const m = /name="([^"]*)"/.exec(xml);
-    return getMock().openKeylayout(xml, m ? m[1] : "Imported");
+    // web: parse with the real Rust core compiled to wasm.
+    return getWeb().openKeylayout(xml);
   },
 
   /** Listen for native menu events (Tauri). Web returns a no-op unlisten. */
@@ -138,7 +137,7 @@ export const ipc = {
   /** Move a user-installed layout to the Trash (reversible). macOS only. */
   async uninstallLayout(path: string): Promise<string> {
     if (isTauri) return invoke("uninstall_layout", { path });
-    return path; // web-mock: no filesystem
+    return path; // web: no filesystem
   },
 
   /** Fire when the installed-layouts folders change (Tauri fs-watch). */
@@ -176,11 +175,14 @@ export const ipc = {
   /** Open a layout by an explicit filesystem path. */
   async openPath(path: string): Promise<DocSummary> {
     if (isTauri) return invoke("open_file", { path });
+    // web: a browser can't read an arbitrary filesystem path; fall back to a
+    // fresh layout named after the file (this branch is desktop-only in
+    // practice — web docs have no on-disk path to recall).
     const m = /([^/]+)\.(keylayout|bundle)$/.exec(path);
-    return getMock().newDocument("standard", m ? m[1] : "Imported");
+    return getWeb().newDocument("standard", m ? m[1] : "Imported");
   },
 
-  /** Native open dialog (Tauri) or browser file picker (web-mock). */
+  /** Native open dialog (Tauri) or browser file picker (web). */
   async openFileDialog(): Promise<DocSummary | null> {
     if (isTauri) {
       const { open } = await import("@tauri-apps/plugin-dialog");
@@ -205,7 +207,7 @@ export const ipc = {
     });
   },
 
-  /** Native save dialog (Tauri) or browser download (web-mock). */
+  /** Native save dialog (Tauri) or browser download (web). */
   async saveFileDialog(id: number, kbIndex: number, name: string): Promise<boolean> {
     if (isTauri) {
       const { save } = await import("@tauri-apps/plugin-dialog");
@@ -229,22 +231,22 @@ export const ipc = {
 
   async listDocuments(): Promise<DocSummary[]> {
     if (isTauri) return invoke("list_documents", {});
-    return getMock().listDocuments();
+    return getWeb().listDocuments();
   },
 
   async closeDocument(id: number): Promise<void> {
     if (isTauri) return invoke("close_document", { id });
-    getMock().closeDocument(id);
+    return getWeb().closeDocument(id);
   },
 
   async renameDocument(id: number, kbIndex: number, name: string): Promise<DocSummary> {
     if (isTauri) return invoke("rename_document", { id, kbIndex, name });
-    return getMock().rename(id, kbIndex, name);
+    return getWeb().rename(id, kbIndex, name);
   },
 
   async duplicateDocument(id: number): Promise<DocSummary> {
     if (isTauri) return invoke("duplicate_document", { id });
-    return getMock().duplicate(id);
+    return getWeb().duplicate(id);
   },
 
   async getSnapshot(
@@ -256,7 +258,7 @@ export const ipc = {
   ): Promise<KeyboardSnapshot> {
     if (isTauri)
       return invoke("get_snapshot", { id, kbIndex, typeCode, mask, deadState });
-    return getMock().getSnapshot(id, kbIndex, typeCode, mask, deadState);
+    return getWeb().getSnapshot(id, kbIndex, typeCode, mask, deadState);
   },
 
   async setKeyOutput(
@@ -270,7 +272,7 @@ export const ipc = {
   ): Promise<KeyboardSnapshot> {
     if (isTauri)
       return invoke("set_key_output", { id, kbIndex, typeCode, mask, deadState, code, output });
-    return getMock().setKeyOutput(id, kbIndex, typeCode, mask, deadState, code, output);
+    return getWeb().setKeyOutput(id, kbIndex, typeCode, mask, deadState, code, output);
   },
 
   async clearKey(
@@ -283,7 +285,7 @@ export const ipc = {
   ): Promise<KeyboardSnapshot> {
     if (isTauri)
       return invoke("clear_key", { id, kbIndex, typeCode, mask, deadState, code });
-    return getMock().clearKey(id, kbIndex, typeCode, mask, deadState, code);
+    return getWeb().clearKey(id, kbIndex, typeCode, mask, deadState, code);
   },
 
   async makeKeyDead(
@@ -297,7 +299,7 @@ export const ipc = {
   ): Promise<KeyboardSnapshot> {
     if (isTauri)
       return invoke("make_key_dead", { id, kbIndex, typeCode, mask, code, nextState, terminator });
-    return getMock().makeKeyDead(id, kbIndex, typeCode, mask, code, nextState, terminator);
+    return getWeb().makeKeyDead(id, kbIndex, typeCode, mask, code, nextState, terminator);
   },
 
   async swapKeys(
@@ -311,7 +313,7 @@ export const ipc = {
   ): Promise<KeyboardSnapshot> {
     if (isTauri)
       return invoke("swap_keys", { id, kbIndex, typeCode, mask, deadState, codeA, codeB });
-    return getMock().swapKeys(id, kbIndex, typeCode, mask, deadState, codeA, codeB);
+    return getWeb().swapKeys(id, kbIndex, typeCode, mask, deadState, codeA, codeB);
   },
 
   async unlinkKey(
@@ -324,7 +326,7 @@ export const ipc = {
   ): Promise<KeyboardSnapshot> {
     if (isTauri)
       return invoke("unlink_key", { id, kbIndex, typeCode, mask, deadState, code });
-    return getMock().unlinkKey(id, kbIndex, typeCode, mask, deadState, code);
+    return getWeb().unlinkKey(id, kbIndex, typeCode, mask, deadState, code);
   },
 
   async relinkKey(
@@ -337,64 +339,64 @@ export const ipc = {
   ): Promise<KeyboardSnapshot> {
     if (isTauri)
       return invoke("relink_key", { id, kbIndex, typeCode, mask, deadState, code });
-    return getMock().relinkKey(id, kbIndex, typeCode, mask, deadState, code);
+    return getWeb().relinkKey(id, kbIndex, typeCode, mask, deadState, code);
   },
 
   async undo(id: number): Promise<void> {
     if (isTauri) return invoke("undo", { id });
-    getMock().undo(id);
+    return getWeb().undo(id);
   },
   async redo(id: number): Promise<void> {
     if (isTauri) return invoke("redo", { id });
-    getMock().redo(id);
+    return getWeb().redo(id);
   },
   async undoLabel(id: number): Promise<string | null> {
     if (isTauri) return invoke("undo_label", { id });
-    return getMock().undoLabel(id);
+    return getWeb().undoLabel(id);
   },
 
   async validate(id: number, kbIndex: number): Promise<Issue[]> {
     if (isTauri) return invoke("validate", { id, kbIndex });
-    return getMock().validate(id, kbIndex);
+    return getWeb().validate(id, kbIndex);
   },
   async repair(id: number, kbIndex: number): Promise<string[]> {
     if (isTauri) return invoke("repair", { id, kbIndex });
-    return getMock().repair(id, kbIndex);
+    return getWeb().repair(id, kbIndex);
   },
 
   async actionsView(id: number, kbIndex: number): Promise<ActionsView> {
     if (isTauri) return invoke("actions_view", { id, kbIndex });
-    return getMock().actionsView(id, kbIndex);
+    return getWeb().actionsView(id, kbIndex);
   },
 
   async modifierMapView(id: number, kbIndex: number, typeCode: number): Promise<ModifierSelectView[]> {
     if (isTauri) return invoke("modifier_map_view", { id, kbIndex, typeCode });
-    return getMock().modifierMapView();
+    return getWeb().modifierMapView(id, kbIndex, typeCode);
   },
 
   async setTerminator(id: number, kbIndex: number, layoutState: string, output: string): Promise<void> {
     if (isTauri) return invoke("set_terminator", { id, kbIndex, layoutState, output });
-    getMock().setTerminator(id, kbIndex, layoutState, output);
+    return getWeb().setTerminator(id, kbIndex, layoutState, output);
   },
 
   async removeUnusedStates(id: number, kbIndex: number): Promise<number> {
     if (isTauri) return invoke("remove_unused_states", { id, kbIndex });
-    return getMock().removeUnusedStates(id, kbIndex);
+    return getWeb().removeUnusedStates(id, kbIndex);
   },
 
   async removeUnusedActions(id: number, kbIndex: number): Promise<number> {
     if (isTauri) return invoke("remove_unused_actions", { id, kbIndex });
-    return getMock().removeUnusedActions(id, kbIndex);
+    return getWeb().removeUnusedActions(id, kbIndex);
   },
 
   async addSpecialKeys(id: number, kbIndex: number): Promise<number> {
     if (isTauri) return invoke("add_special_keys", { id, kbIndex });
-    return getMock().addSpecialKeys(id, kbIndex);
+    return getWeb().addSpecialKeys(id, kbIndex);
   },
 
   async getXml(id: number, kbIndex: number, codeNonAscii: boolean): Promise<string> {
     if (isTauri) return invoke("get_xml", { id, kbIndex, codeNonAscii });
-    return getMock().getXml(id, kbIndex, codeNonAscii);
+    return getWeb().getXml(id, kbIndex, codeNonAscii);
   },
 
   /** Export the document as a .bundle directory (desktop save dialog). */
@@ -431,6 +433,6 @@ export const ipc = {
     format: SaveFormat,
   ): Promise<void> {
     if (isTauri) return invoke("save_file", { id, kbIndex, path, format });
-    getMock().saveFile(id, kbIndex, path);
+    return getWeb().saveFile(id, kbIndex, path);
   },
 };

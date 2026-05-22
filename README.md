@@ -37,7 +37,7 @@ no Xcode, no Apple Developer account, no Carbon APIs. Reads and writes the same
 | Way | Who it's for | How |
 | --- | --- | --- |
 | **Download the desktop app** | Most users (macOS / Windows / Linux) | Grab a build from [Releases](https://github.com/ysalitrynskyi/keymano/releases), or build from source (below). |
-| **Run in your browser** | Try it instantly, no install | Use the hosted instance at **[keymano.ys.contact](https://keymano.ys.contact)**, or run `pnpm dev` and open `http://localhost:1420` — the full UI runs against an in-browser mock backend. [Self-host it](#self-host-on-your-own-domain) with one Docker stack. |
+| **Run in your browser** | Try it instantly, no install | Use the hosted instance at **[keymano.ys.contact](https://keymano.ys.contact)**, or run `pnpm dev` and open `http://localhost:1420` — the full UI runs the real Rust core compiled to WebAssembly. [Self-host it](#self-host-on-your-own-domain) with one Docker stack. |
 | **Build from source** | Contributors, packagers | `pnpm install && pnpm tauri dev` — see [Build from source](#build-from-source). |
 
 > The desktop app is a small native binary (Tauri + Rust). The browser version is
@@ -157,12 +157,13 @@ Step-by-step help for non-developers:
 
 ### Run in the browser (no install)
 
-The entire UI runs in a browser against an in-memory backend — ideal for a quick
-look or a hosted demo. Open imports a real `.keylayout` (parsed in the browser),
-Save/Export download a real file, and Install downloads the file (placing it in
-the system folder needs the desktop app). The in-browser backend is a functional
-stand-in, not the authoritative Rust core — for production fidelity use the
-desktop build.
+The entire UI runs in a browser — ideal for a quick look or a hosted demo. It
+runs the **same Rust core as the desktop app, compiled to WebAssembly**, so
+parsing, serialization, validation, and modifier/dead-key resolution are
+identical: Open imports a real `.keylayout`, Save/Export download a real file.
+The only desktop-only step is installing into the system Keyboard Layouts
+folder (browsers can't write there), so in the browser Install downloads the
+file for you to place manually.
 
 ```bash
 pnpm install
@@ -262,8 +263,8 @@ cp .env.example .env          # then set CLOUDFLARE_TUNNEL_TOKEN
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-> The hosted build is the in-browser app (full UI against the in-memory mock
-> backend). For production-fidelity parsing/serialization, use the desktop app.
+> The hosted build is the in-browser app — the full UI running the real Rust
+> core compiled to WebAssembly, so parsing/serialization match the desktop app.
 
 ---
 
@@ -326,10 +327,11 @@ macOS only re-scans `~/Library/Keyboard Layouts` on login.
 <details>
 <summary><b>What's the difference between the browser and desktop versions?</b></summary>
 
-Same UI. The browser version edits and downloads real `.keylayout` files but
-can't write into the system Keyboard Layouts folder (browsers can't), and it uses
-an in-browser stand-in for the Rust core. For installing layouts and
-production-fidelity parsing, use the desktop app.
+Same UI **and the same Rust core** — the browser runs `keylayout-core` compiled
+to WebAssembly, so parsing/serialization/validation match the desktop app byte
+for byte. The only difference is the browser can't write into the system
+Keyboard Layouts folder (no app can from a browser), so Install downloads the
+file for you to place manually; on the desktop it installs directly.
 </details>
 
 <details>
@@ -357,13 +359,15 @@ crates/keylayout-core    Pure Rust: model, parse, serialize, modifier resolution
                          dead-key resolution, validation + repair, templates, ids,
                          special keys, bundles. No Tauri, fully unit-tested.
 crates/keymano-session   Tauri-free document session: open docs, undo/redo, edits.
+crates/keymano-wasm      wasm-bindgen wrapper over the session → the browser build.
 src-tauri                Thin Tauri command shell over the session (desktop).
 src                      React + TypeScript frontend: keyboard, pages, ipc, i18n.
 src/assets/keyboards     ANSI / ISO / JIS geometry presets (data-driven JSON).
 ```
 
 The Rust core is portable and Tauri-free, so the same parsing and serialization
-logic powers the desktop app, the tests, and (potentially) other front-ends.
+logic powers the desktop app (over Tauri IPC) and the browser build (compiled to
+WebAssembly) — one engine everywhere — as well as the tests.
 Contributor docs: [`docs/DEVELOP.md`](docs/DEVELOP.md). User guide:
 [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md).
 
@@ -379,7 +383,7 @@ public issue.
 Quick local checks before a PR:
 
 ```bash
-pnpm lint && pnpm exec tsc -b && pnpm test
+pnpm lint && pnpm wasm:build && pnpm exec tsc -b && pnpm test
 cargo test -p keylayout-core -p keymano-session
 cargo clippy --workspace --all-targets -- -D warnings
 ```

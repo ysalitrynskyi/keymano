@@ -3,7 +3,7 @@
 # The Tauri DESKTOP app needs a system WebView (WebKitGTK on Linux) and is built
 # natively per-OS (`pnpm tauri build`) or in CI — not in Docker. But the full
 # web app and every test run here:
-#   - `web`       : UI dev server via the in-browser ipc web-mock (no Rust)
+#   - `web`       : UI dev server with the Rust core compiled to WebAssembly
 #   - `web-prod`  : production static build served by nginx (deployable anywhere)
 #   - `web-test`  : frontend unit tests (vitest)
 #   - `check`     : eslint + TypeScript typecheck

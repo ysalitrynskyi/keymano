@@ -284,7 +284,7 @@ describe("editor store", () => {
   });
 
   it("closeDoc clears active state when the last document closes", async () => {
-    // The mock backend is a singleton across tests — close any leftovers first.
+    // The web backend is a singleton across tests — close any leftovers first.
     for (const d of await ipc.listDocuments()) await ipc.closeDocument(d.id);
     useEditor.setState({ docs: [], activeDocId: null, snapshot: null });
     await useEditor.getState().newDocument("standard", "Solo");

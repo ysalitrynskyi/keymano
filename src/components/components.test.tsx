@@ -78,7 +78,7 @@ describe("InstalledPicker", () => {
   it("shows the empty state on web (no system access)", async () => {
     const onClose = vi.fn();
     render(<InstalledPicker onClose={onClose} />);
-    // The browser can't read the OS, so the web-mock returns no layouts and the
+    // The browser can't read the OS, so the web backend returns no layouts and the
     // picker explains that — no fake/misleading entries.
     expect(await screen.findByText(/No installed layout files/)).toBeInTheDocument();
   });

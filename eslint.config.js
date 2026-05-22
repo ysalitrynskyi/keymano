@@ -13,6 +13,8 @@ export default ts.config(
       "node_modules/**",
       "coverage/**",
       "crates/**",
+      // Generated wasm-bindgen glue (browser globals, not our source).
+      "src/wasm/**",
     ],
   },
   js.configs.recommended,
