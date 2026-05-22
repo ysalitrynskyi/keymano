@@ -181,6 +181,9 @@ pub fn list_input_sources() -> Vec<InputSource> {
 /// Keyboard Layouts directories). Other OSes return an empty list.
 #[tauri::command]
 pub fn list_installed_layouts() -> Vec<InstalledLayout> {
+    // `out` is only pushed to under the macOS cfg below; on other targets it
+    // stays empty, so the `mut` is unused there.
+    #[allow(unused_mut)]
     let mut out: Vec<InstalledLayout> = Vec::new();
     #[cfg(target_os = "macos")]
     {

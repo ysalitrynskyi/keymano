@@ -378,13 +378,15 @@ validate, and expose each language's full alphabet. See
 
 ## Privacy
 
-Keymano does not collect, transmit, log, or share any data. The desktop app
-runs entirely offline; the hosted web build sets no cookies and runs no
-analytics or trackers by default (enforced by the project's strict
-[Content Security Policy](docker/nginx.conf)). A self-hoster can optionally
-enable Google Analytics on the web build via the `GA_MEASUREMENT_ID`
-environment variable (off unless set); the desktop app has no analytics path.
-See [PRIVACY.md](PRIVACY.md) for the full statement.
+The **desktop app** collects nothing and runs entirely offline — no telemetry,
+no analytics, no trackers. The **hosted web app** at
+[keymano.ys.contact](https://keymano.ys.contact) uses **Google Analytics**
+(anonymous page-view / usage stats; Google sets its cookies). Your `.keylayout`
+work never leaves your browser — only standard analytics events are sent.
+Analytics is opt-in per deployment via the `GA_MEASUREMENT_ID` environment
+variable, so a self-hosted instance has none unless its operator turns it on,
+and the desktop app has no analytics path at all. See
+[PRIVACY.md](PRIVACY.md) for the full statement.
 
 ## License
 

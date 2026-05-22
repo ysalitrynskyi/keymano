@@ -49,7 +49,9 @@ pub fn parse_keylayout(xml: &str) -> Result<Keyboard> {
                     header_comments.push(String::from_utf8_lossy(c.as_ref()).to_string());
                 }
             }
-            Ok(Event::Text(_)) | Ok(Event::CData(_)) => {}
+            // Text, CDATA, and general entity refs (`&foo;`, quick-xml 0.39+ —
+            // we're non-validating so refs aren't expanded) carry no structure.
+            Ok(Event::Text(_)) | Ok(Event::CData(_)) | Ok(Event::GeneralRef(_)) => {}
             Ok(Event::Start(e)) => {
                 if e.name().as_ref() == b"keyboard" {
                     if saw_keyboard {

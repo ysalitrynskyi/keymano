@@ -31,6 +31,11 @@ export default ts.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": "off",
+      // New in eslint-plugin-react-hooks 7. Our effects call *async* loaders
+      // (`void reload()`), so setState happens in a promise, not synchronously —
+      // not the cascading-render antipattern this rule targets. Off to avoid
+      // false positives on standard on-mount data loads.
+      "react-hooks/set-state-in-effect": "off",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",

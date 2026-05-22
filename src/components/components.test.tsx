@@ -44,7 +44,7 @@ describe("Splash", () => {
 });
 
 describe("ErrorBoundary", () => {
-  function Boom(): JSX.Element {
+  function Boom(): never {
     throw new Error("kaboom");
   }
 

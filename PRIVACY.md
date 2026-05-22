@@ -19,12 +19,14 @@ advisory ([SECURITY.md](SECURITY.md)) — that is a bug we want to fix.
   (or platform equivalent) folder.
 - **Hosted web app at `https://keymano.ys.contact`:** a static SPA served by
   nginx behind a Cloudflare Tunnel. No accounts, and your `.keylayout` work stays
-  in your browser — nothing about your layouts is ever sent to a server. The
-  shipped build runs no analytics, cookies, or third-party trackers by default.
-  A self-hoster (including this instance's operator) **may** opt in to Google
-  Analytics by setting the `GA_MEASUREMENT_ID` environment variable; when that is
-  set, the page loads Google's analytics script and sets Google's cookies. It is
-  off unless explicitly configured.
+  in your browser — nothing about your layouts is ever sent to a server. This
+  hosted instance **uses Google Analytics** for anonymous page-view / usage
+  statistics; Google's analytics script loads and Google sets its cookies
+  (governed by [Google's privacy policy](https://policies.google.com/privacy)).
+  Only standard analytics events are sent — never your layout content. Analytics
+  is enabled per deployment via the `GA_MEASUREMENT_ID` environment variable, so
+  a **self-hosted** instance has none unless its operator turns it on, and the
+  **desktop app** has no analytics path at all.
 - **Source / GitHub repository:** subject to GitHub's own privacy policy when you
   visit, clone, or open issues; that is outside Keymano's control.
 
@@ -32,23 +34,22 @@ advisory ([SECURITY.md](SECURITY.md)) — that is a bug we want to fix.
 
 ## What Keymano collects
 
-**Nothing by default.**
+**The app collects nothing about your layouts.**
 
-The Keymano application itself — desktop or web — does not collect, transmit,
-log, profile, or share any personal data, usage data, telemetry, error reports,
-IP addresses, device identifiers, or analytics. Not even anonymized aggregates.
-The product code ships with no analytics.
+The Keymano application code — desktop or web — does not collect, transmit, log,
+profile, or share your layout content, files, or document data. The product
+code ships with **no** bundled analytics SDK.
 
-The one exception is operator-controlled and off by default: a self-hoster can
-enable **Google Analytics** on the hosted web build by setting the
-`GA_MEASUREMENT_ID` environment variable on the container. When set, the page
-loads Google's `gtag.js`, sends pageview/usage events to Google, and sets
-Google's cookies — governed by
-[Google's privacy policy](https://policies.google.com/privacy). When unset (the
-default), none of that code is served. This switch never affects the desktop
-app, which has no analytics path at all.
+The **hosted web app** at `keymano.ys.contact` does load **Google Analytics**
+(injected at deploy time from the `GA_MEASUREMENT_ID` environment variable) for
+anonymous page-view / usage statistics: Google's `gtag.js` runs, sends
+pageview/usage events to Google, and sets Google's cookies — governed by
+[Google's privacy policy](https://policies.google.com/privacy). It never
+receives your `.keylayout` content. A self-hosted instance that leaves
+`GA_MEASUREMENT_ID` unset serves none of that code. This never affects the
+desktop app, which has no analytics path at all.
 
-You can verify the default-off posture in the source:
+You can verify this in the source:
 
 - The desktop app's Tauri Content Security Policy (`src-tauri/tauri.conf.json`)
   forbids any non-self network connection — there is no way to enable analytics
@@ -96,17 +97,17 @@ Rust core to refuse traversal outside that folder.
 
 ## Cookies and tracking
 
-By default the hosted site sets **no cookies** and runs **no analytics or
-tag-management scripts**, and it always opts out of Google's interest-cohort
-tracking with `Permissions-Policy: interest-cohort=()`. The strict
-`Content-Security-Policy` served with every response blocks third-party scripts
-entirely — so no tracker can run unless the operator deliberately enables it.
+The hosted site at `keymano.ys.contact` loads **Google Analytics** (`gtag.js`),
+which sets Google's `_ga*` cookies and reports anonymous page-view / usage
+events to Google. It is the only third-party script and the only source of
+cookies; the `Content-Security-Policy` is widened to exactly Google's analytics
+origins and nothing else, and the page always opts out of Google's
+interest-cohort tracking with `Permissions-Policy: interest-cohort=()`.
 
-If the operator sets `GA_MEASUREMENT_ID`, the site loads Google Analytics
-(`gtag.js`), which sets Google's `_ga*` cookies and reports usage to Google; the
-CSP is widened to exactly Google's analytics origins and nothing else. This is
-the only way cookies or third-party scripts are ever introduced, it is off
-unless configured, and it has no equivalent in the desktop app.
+Analytics is gated by the `GA_MEASUREMENT_ID` environment variable. A
+self-hosted instance that leaves it unset sets **no cookies** and loads **no
+analytics or tag-management scripts** — the strict CSP then blocks third-party
+scripts entirely. The desktop app has no analytics path either way.
 
 ## Logs
 

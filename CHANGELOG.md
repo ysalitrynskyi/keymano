@@ -105,6 +105,13 @@ runs on macOS, Windows, Linux, and in the browser.
   with dark + light masters in `src-tauri/icon-source*.svg` and a
   `scripts/generate-icons.sh` `VARIANT` switch to regenerate the whole set.
 
+### Dependencies & toolchain
+- Frontend on the latest majors: React 19, Vite 8, Vitest 4, TypeScript 6,
+  ESLint 10, i18next 26. Rust on quick-xml 0.39, thiserror 2, notify 8. CI
+  actions: `actions/checkout` v6, `actions/github-script` v9,
+  `pnpm/action-setup` v6, `docker/login-action` v4, `docker/build-push-action`
+  v7.
+
 ### Tooling, CI & releases
 - Rust + frontend test suites; ESLint / clippy clean; hostile-XML regression
   tests (billion-laughs, XXE, deep nesting).
