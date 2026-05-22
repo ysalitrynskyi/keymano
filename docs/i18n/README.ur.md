@@ -9,6 +9,7 @@
 ## چلانے کے تین طریقے
 
 - **ڈیسک ٹاپ ایپ ڈاؤن لوڈ کریں** — macOS، Windows، یا Linux کے لیے، [Releases page](https://github.com/ysalitrynskyi/keymano/releases) سے۔
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **اسے اپنے براؤزر میں استعمال کریں** — ہوسٹ شدہ ایپ **[keymano.ys.contact](https://keymano.ys.contact)** پر کھولیں (مینٹینر کی میزبانی میں); پوری ایپ آپ کے براؤزر میں چلتی ہے، کسی انسٹالیشن کی ضرورت نہیں۔
 - **سورس سے بنائیں** — معاونین کے لیے; [English README](../../README.md#build-from-source) دیکھیں۔
 

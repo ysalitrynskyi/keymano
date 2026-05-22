@@ -9,6 +9,7 @@
 ## سه راه برای اجرا
 
 - **دانلود برنامهٔ دسکتاپ** — برای macOS، Windows، یا Linux، از [صفحهٔ Releases](https://github.com/ysalitrynskyi/keymano/releases).
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **استفاده در مرورگر** — برنامهٔ میزبانی‌شده را در **[keymano.ys.contact](https://keymano.ys.contact)** باز کنید (میزبانی‌شده توسط نگهدارنده)؛ کل برنامه در مرورگر شما اجرا می‌شود، بدون نیاز به نصب.
 - **ساخت از سورس** — برای مشارکت‌کنندگان؛ به [README انگلیسی](../../README.md#build-from-source) مراجعه کنید.
 

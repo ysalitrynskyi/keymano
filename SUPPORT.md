@@ -16,7 +16,8 @@ Please include:
 
 - what you did, what you expected, what happened instead,
 - the Keymano version (About ▸ Version, or the GitHub Release tag),
-- the platform (macOS / Windows / Linux / web build),
+- the platform (macOS / Windows / Linux / web build). **macOS won't open the app?**
+  See [Getting Started — First launch on macOS](docs/GETTING_STARTED.md#first-launch-on-macos-important).
 - if the bug involves a specific `.keylayout` / `.bundle`, attach a minimal
   reproducer — never send anything private.
 

@@ -21,7 +21,8 @@ src                     React + TS frontend (keyboard, pages, ipc, i18n)
 docs/                   GETTING_STARTED, DEVELOP, i18n READMEs, screenshots
 ```
 
-Read [`docs/DEVELOP.md`](docs/DEVELOP.md) before a substantial change.
+Read [`docs/DEVELOP.md`](docs/DEVELOP.md) before a substantial change. Picking up the
+project cold (review, audit, release)? Start with [`docs/AI_HANDOFF.md`](docs/AI_HANDOFF.md).
 
 ## Develop
 

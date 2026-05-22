@@ -9,6 +9,7 @@
 ## Drie manieren om het uit te voeren
 
 - **Download de desktop-app** — voor macOS, Windows of Linux, via de [Releases page](https://github.com/ysalitrynskyi/keymano/releases).
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **Gebruik het in je browser** — open de gehoste app op **[keymano.ys.contact](https://keymano.ys.contact)** (gehost door de onderhouder); de volledige app draait in je browser, zonder installatie.
 - **Bouwen vanuit broncode** — voor bijdragers; zie de [English README](../../README.md#build-from-source).
 

@@ -9,6 +9,7 @@
 ## Trois façons de l’exécuter
 
 - **Télécharger l’application de bureau** — pour macOS, Windows ou Linux, depuis la [page des versions](https://github.com/ysalitrynskyi/keymano/releases).
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **L’utiliser dans votre navigateur** — ouvrez l’application hébergée à **[keymano.ys.contact](https://keymano.ys.contact)** (hébergée par le mainteneur) ; l’application complète s’exécute dans votre navigateur, sans installation.
 - **Compiler à partir des sources** — pour les contributeurs ; voir le [README en anglais](../../README.md#build-from-source).
 

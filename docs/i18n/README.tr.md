@@ -9,6 +9,7 @@
 ## Çalıştırmanın üç yolu
 
 - **Masaüstü uygulamasını indirin** — macOS, Windows veya Linux için [Sürümler sayfasından](https://github.com/ysalitrynskyi/keymano/releases).
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **Tarayıcınızda kullanın** — barındırılan uygulamayı **[keymano.ys.contact](https://keymano.ys.contact)** adresinde açın (bakımcı tarafından barındırılır); tam uygulama tarayıcınızda çalışır, kurulum gerekmez.
 - **Kaynak koddan derleyin** — katkıda bulunacaklar için; [İngilizce README](../../README.md#build-from-source) bölümüne bakın.
 

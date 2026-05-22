@@ -133,10 +133,27 @@ Polski · Українська · Русский · 日本語 · 简体中文 ·
 
 Every tagged release is built by CI and published on the
 [Releases page](https://github.com/ysalitrynskyi/keymano/releases) with bundles
-for each platform: macOS (universal `.dmg`), Windows (`.msi` / `.exe`), and
-Linux (`.deb` / `.AppImage`). The app is **unsigned** — on macOS, right-click the
-app and choose *Open* the first time (Gatekeeper), or run
-`xattr -dr com.apple.quarantine /Applications/Keymano.app`.
+for each platform:
+
+| Platform | File | Notes |
+| --- | --- | --- |
+| **macOS** (Apple Silicon + Intel) | `Keymano_*_universal.dmg` | **Unsigned** — see [macOS first-run](#macos-first-run-unsigned-app) below |
+| **Windows** (x86_64 / arm64) | `.msi` or `.exe` | SmartScreen may warn; choose *Run anyway* |
+| **Linux** (x86_64 / arm64) | `.deb` or `.AppImage` | |
+
+### macOS first-run (unsigned app)
+
+Keymano is **not signed** with an Apple Developer ID. Install from the `.dmg`
+(drag Keymano to **Applications**). If macOS refuses to open the app, run this
+**once** in Terminal:
+
+```bash
+xattr -d com.apple.quarantine /Applications/Keymano.app
+```
+
+Typical message: *“Apple could not verify…”* — normal for free unsigned apps.
+Step-by-step help for non-developers:
+[Getting Started — First launch on macOS](docs/GETTING_STARTED.md#first-launch-on-macos-important).
 
 ### Run in the browser (no install)
 
@@ -279,10 +296,15 @@ docker compose -f docker-compose.prod.yml up -d
 <details>
 <summary><b>macOS says the app is damaged / from an unidentified developer</b></summary>
 
-The app is unsigned (it's free and open-source). Right-click the app → **Open** →
-**Open**, just once. If it still won't open, run
-`xattr -dr com.apple.quarantine /Applications/Keymano.app` in Terminal. Full
-steps are in the [Getting Started guide](docs/GETTING_STARTED.md#first-launch-on-macos-important).
+Keymano is unsigned (free, open-source; no paid Apple Developer ID). Install from
+the `.dmg` into **Applications**, then in **Terminal** run:
+
+```bash
+xattr -d com.apple.quarantine /Applications/Keymano.app
+```
+
+You only need this once. Full walkthrough (including what the scary Gatekeeper
+message means): [Getting Started — First launch on macOS](docs/GETTING_STARTED.md#first-launch-on-macos-important).
 </details>
 
 <details>

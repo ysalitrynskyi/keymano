@@ -25,23 +25,34 @@ You do **not** need a GitHub account, git, or any developer tools.
    - **Windows** → the file ending in **`.msi`** (or **`.exe`**)
    - **Linux** → the file ending in **`.AppImage`** or **`.deb`**
 4. Open the downloaded file and install it like any normal app.
+5. **macOS only:** if the app will not open, follow [First launch on macOS](#first-launch-on-macos-important) below (one-time step).
 
 ### First launch on macOS (important)
 
-Keymano is **not signed** with an Apple Developer certificate (that costs money
-and isn't needed for a free, open tool). macOS will warn you the first time. To
-open it anyway:
+Keymano is **not signed** with an Apple Developer ID (signing costs $99/year and
+this app is free). macOS may block the first launch with a message like:
 
-- **Right-click** (or Control-click) the Keymano app → choose **Open** → in the
-  dialog, click **Open** again. You only do this once.
-- If macOS still refuses, open **Terminal** and paste:
-  ```
-  xattr -dr com.apple.quarantine /Applications/Keymano.app
-  ```
-  then press Return and try again.
+> *"Apple could not verify 'Keymano.app' is free of malware that may harm your Mac or compromise your privacy."*
 
-This is normal for free open-source Mac apps — the code is fully public, so you
-can see exactly what it does.
+**This is normal for unsigned open-source Mac apps.** The source code is public on
+GitHub if you want to review it before running.
+
+**To run Keymano (you only need to do this once):**
+
+1. Open the `.dmg` from the release and drag **Keymano** into your **Applications** folder.
+2. Open the **Terminal** app (press `⌘ + Space`, type `Terminal`, press Return).
+3. Paste this command and press Return:
+
+   ```bash
+   xattr -d com.apple.quarantine /Applications/Keymano.app
+   ```
+
+4. Open Keymano from **Applications** or Launchpad as usual.
+
+That command removes the “downloaded from the internet” flag macOS attaches to
+the app. If you prefer not to use Terminal, try **right-click** (or Control-click)
+**Keymano** → **Open** → **Open** in the dialog — that works on some Macs but not
+all; the Terminal command above is the reliable fix.
 
 ---
 

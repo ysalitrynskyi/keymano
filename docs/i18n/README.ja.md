@@ -9,6 +9,7 @@
 ## 実行する 3 つの方法
 
 - **デスクトップアプリをダウンロード** — macOS、Windows、Linux 向け。 [Releases page](https://github.com/ysalitrynskyi/keymano/releases) から入手できます。
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **ブラウザで使用** — ホストされたアプリを **[keymano.ys.contact](https://keymano.ys.contact)** で開きます（メンテナーがホストしています）。アプリ全体がブラウザ内で動作し、インストールは不要です。
 - **ソースからビルド** — コントリビューター向けです。 [English README](../../README.md#build-from-source) を参照してください。
 

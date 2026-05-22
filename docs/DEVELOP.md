@@ -1,12 +1,15 @@
 # Developer guide
 
 Short reference for contributors. User-facing install help is in
-[GETTING_STARTED.md](GETTING_STARTED.md).
+[GETTING_STARTED.md](GETTING_STARTED.md). **New AI / auditor session:** read
+[AI_HANDOFF.md](AI_HANDOFF.md) first for release state and contribution guardrails.
+macOS install help for users: [GETTING_STARTED.md#first-launch-on-macos-important](GETTING_STARTED.md#first-launch-on-macos-important);
+release copy template: [RELEASE_NOTES_MACOS.md](RELEASE_NOTES_MACOS.md).
 
 **Product positioning (public / SEO):** open-source, cross-platform **Ukelele
 alternative** for Apple's `.keylayout` / `.bundle` formats — see [README](../README.md)
-for user-facing copy. Do not document or reference third-party editor source code
-in this repo.
+for user-facing copy. Implementation notes should cite Apple's public
+`KeyboardLayout.dtd`, Keymano code, and Keymano tests.
 
 ## Layout
 

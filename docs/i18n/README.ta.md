@@ -9,6 +9,7 @@
 ## இதை இயக்க மூன்று வழிகள்
 
 - **டெஸ்க்டாப் செயலியைப் பதிவிறக்கவும்** — macOS, Windows, அல்லது Linuxக்கு, [Releases page](https://github.com/ysalitrynskyi/keymano/releases) இலிருந்து.
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **உங்கள் உலாவியில் பயன்படுத்தவும்** — **[keymano.ys.contact](https://keymano.ys.contact)** இல் ஹோஸ்ட் செய்யப்பட்ட செயலியைத் திறக்கவும் (பராமரிப்பாளர் வழங்கியது); முழு செயலியும் உங்கள் உலாவியிலேயே இயங்கும், நிறுவல் தேவையில்லை.
 - **மூலக் குறியிலிருந்து கட்டமைக்கவும்** — பங்களிப்பாளர்களுக்காக; [English README](../../README.md#build-from-source) ஐப் பார்க்கவும்.
 

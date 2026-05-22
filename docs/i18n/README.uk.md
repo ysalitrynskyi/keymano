@@ -9,6 +9,7 @@
 ## Три способи запустити його
 
 - **Завантажте настільний застосунок** — для macOS, Windows або Linux, на [сторінці Releases](https://github.com/ysalitrynskyi/keymano/releases).
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **Використовуйте його у браузері** — відкрийте розміщений застосунок на **[keymano.ys.contact](https://keymano.ys.contact)** (розміщено супроводжувачем); весь застосунок працює у браузері, без встановлення.
 - **Зберіть із вихідного коду** — для учасників; дивіться [англійський README](../../README.md#build-from-source).
 

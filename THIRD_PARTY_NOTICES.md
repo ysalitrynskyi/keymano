@@ -119,10 +119,9 @@ copyleft) — see the MPL-2.0 text at https://www.mozilla.org/MPL/2.0/.
 ## Format compatibility
 
 The `.keylayout` XML format is documented in Apple's public
-`KeyboardLayout.dtd`. Keymano implements that format independently; no Apple or
-third-party editor source code is included. Files produced by other layout
-editors (including the open-source [Ukelele](https://software.sil.org/ukelele/)
-tool) that follow the same format generally open in Keymano.
+`KeyboardLayout.dtd`. Keymano reads and writes files that follow that format.
+Files produced by compatible layout editors (including
+[Ukelele](https://software.sil.org/ukelele/)) generally open in Keymano.
 
 "Apple", "macOS", and "Ukelele" are trademarks of their respective owners.
 Keymano is an independent project and is not affiliated with or endorsed by

@@ -9,6 +9,7 @@
 ## চালানোর তিনটি উপায়
 
 - **ডেস্কটপ অ্যাপ ডাউনলোড করুন** — macOS, Windows, বা Linux-এর জন্য, [Releases page](https://github.com/ysalitrynskyi/keymano/releases) থেকে।
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **আপনার ব্রাউজারে ব্যবহার করুন** — হোস্ট করা অ্যাপটি **[keymano.ys.contact](https://keymano.ys.contact)**-এ খুলুন (রক্ষণাবেক্ষণকারী দ্বারা হোস্ট করা); সম্পূর্ণ অ্যাপটি আপনার ব্রাউজারেই চলে, ইনস্টল করার দরকার নেই।
 - **সোর্স থেকে বিল্ড করুন** — অবদানকারীদের জন্য; [English README](../../README.md#build-from-source) দেখুন।
 

@@ -203,7 +203,7 @@ jobs:
               `Cross-platform editor for macOS \`.keylayout\` files and \`.bundle\` packages.`,
               ``,
               `### Downloads`,
-              `- **macOS** — \`.dmg\` (universal: Apple Silicon + Intel). Unsigned: right-click → **Open** on first launch, or \`xattr -dr com.apple.quarantine /Applications/Keymano.app\`.`,
+              `- **macOS** — \`.dmg\` (universal). **Unsigned** — one-time Terminal fix: \`xattr -d com.apple.quarantine /Applications/Keymano.app\`. Guide: https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/GETTING_STARTED.md#first-launch-on-macos-important`,
               `- **Windows** — \`.msi\` or \`.exe\` installer (x86_64 + arm64).`,
               `- **Linux** — \`.deb\` or \`.AppImage\` (x86_64 + arm64).`,
               ``,

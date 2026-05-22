@@ -9,6 +9,7 @@
 ## 執行方式有三種
 
 - **下載桌面應用程式** — 適用於 macOS、Windows 或 Linux，請從 [Releases page](https://github.com/ysalitrynskyi/keymano/releases) 下載。
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **在瀏覽器中使用** — 開啟託管應用程式 **[keymano.ys.contact](https://keymano.ys.contact)**（由維護者託管）；完整應用程式可在瀏覽器中執行，無需安裝。
 - **從原始碼建置** — 供貢獻者使用；請參閱 [English README](../../README.md#build-from-source)。
 

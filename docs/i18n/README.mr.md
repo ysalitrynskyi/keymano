@@ -9,6 +9,7 @@
 ## ते चालवण्याचे तीन मार्ग
 
 - **डेस्कटॉप अॅप डाउनलोड करा** — macOS, Windows, किंवा Linux साठी, [Releases page](https://github.com/ysalitrynskyi/keymano/releases) वरून.
+- **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **ते तुमच्या ब्राउझरमध्ये वापरा** — होस्ट केलेले अॅप **[keymano.ys.contact](https://keymano.ys.contact)** येथे उघडा (देखभालकर्त्याद्वारे होस्ट केलेले); पूर्ण अॅप तुमच्या ब्राउझरमध्ये चालते, कोणतीही स्थापना नाही.
 - **स्रोतापासून बिल्ड करा** — योगदानकर्त्यांसाठी; [English README](../../README.md#build-from-source) पहा.
 
