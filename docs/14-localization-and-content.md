@@ -32,8 +32,11 @@ Whenever `en` strings change, regenerate other locales with the **bulk-text tran
 
 If `mcp__bulk_text__translate_json_file` is unavailable at build time, fall back to `mcp__bulk_text__generate_bulk_text` with an explicit translate prompt, or another available translation MCP — but JSON-file translation is preferred (keeps structure).
 
-### Target languages (v1 set — extend freely)
-`en` (source), `de`, `fr`, `es`, `it`, `pt`, `nl`, `pl`, `uk`, `ru`, `ja`, `zh-Hans`, `zh-Hant`, `ko`. (Keyboard-layout authors are global + multilingual — broad coverage matters.)
+### Target languages (shipped set — extend freely)
+`en` (source) plus 23 translated locales: `de`, `fr`, `es`, `it`, `pt`, `nl`, `pl`, `uk`, `ru`, `ja`, `zh-Hans`, `zh-Hant`, `ko`, `hi`, `ar`, `bn`, `id`, `ur`, `tr`, `vi`, `fa`, `ta`, `mr`. Landing README summaries live in `docs/i18n/README.<lang>.md` (regenerate via `scripts/patch-i18n-readmes.py` when the English README gains new sections).
+
+### Landing README summaries (`docs/i18n/`)
+Short translated READMEs for SEO and the language switcher in the main README. When `README.md` gains new user-facing sections (privacy, getting started, features), update the patch script and re-run it — do not hand-edit every locale file.
 
 ### Rules
 - No string literal in JSX/components — always `t("key")`.

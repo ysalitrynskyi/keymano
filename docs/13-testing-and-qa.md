@@ -37,7 +37,7 @@ This mock is for **design review + Playwright + Storybook only** — it is NOT a
 After each UI slice, do a **visual review in a real browser** using the available MCP tooling — don't trust "it compiles":
 
 1. Start the frontend: `pnpm dev` (Vite, ipc=web-mock) → serves at `http://localhost:1420`.
-2. Open it with a browser/preview MCP (e.g. `Claude_Preview` `preview_start`/`preview_screenshot`, or the Playwright `browser` MCP `browser_navigate` + `browser_take_screenshot`, or `Claude_in_Chrome`).
+2. Open it with a browser automation tool (e.g. Cursor's browser MCP: `browser_navigate` + `browser_take_screenshot`, or Playwright in CI).
 3. **Screenshot each page + key states**: keyboard ANSI/ISO/JIS, modifiers toggled, dead-state preview, key popover open, dialogs, light/dark themes, narrow/wide window.
 4. Review against [08](08-ui-pages.md)/[09](09-interactive-keyboard.md): hierarchy, spacing, alignment, contrast, legibility of key legends at min/max zoom, focus rings, hover/selected states. Fix issues, re-screenshot.
 5. Check responsiveness (resize) and `prefers-reduced-motion`.

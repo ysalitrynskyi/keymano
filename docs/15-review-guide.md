@@ -37,8 +37,8 @@ pnpm tauri dev                   # desktop app (needs a system WebView)
 # Verify
 pnpm lint                        # eslint
 pnpm exec tsc -b                 # typecheck
-pnpm test                        # frontend (vitest) — includes locale parity
-cargo test --workspace           # Rust core + session + roundtrip integration
+pnpm test                        # frontend (vitest, 136 tests) — includes locale parity
+cargo test --workspace           # Rust (129 tests): core + session + roundtrip integration
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
 

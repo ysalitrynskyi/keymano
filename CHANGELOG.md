@@ -110,7 +110,9 @@ runs on macOS, Windows, Linux, and in the browser.
   ESLint 10, i18next 26. Rust on quick-xml 0.39, thiserror 2, notify 8. CI
   actions: `actions/checkout` v6, `actions/github-script` v9,
   `pnpm/action-setup` v6, `docker/login-action` v4, `docker/build-push-action`
-  v7.
+  v7. Dependabot PR #8 (`quick-xml` 0.40) is intentionally not merged:
+  `plist` 1.9.x (used by core and Tauri) pins `quick-xml ^0.39`; bumping to
+  0.40 forces `plist` down to 1.8 and duplicates `quick-xml` in the lockfile.
 
 ### Tooling, CI & releases
 - Rust + frontend test suites; ESLint / clippy clean; hostile-XML regression

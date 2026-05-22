@@ -2,6 +2,8 @@
 
 > 🌐 这是一个翻译摘要。完整文档为英文：**[README](../../README.md)**。
 
+> 🟢 **不熟悉 GitHub 或不是开发者？** 请阅读通俗英文 **[入门指南](../../docs/GETTING_STARTED.md)**。
+
 **Keymano** 是一款免费、开源、跨平台的编辑器，用于编辑 macOS `.keylayout` 文件和 `.bundle` 键盘包——是 Ukelele 的开源替代方案。你可以在 macOS、Windows、Linux 上，或直接在浏览器中，通过一个可实时点击的键盘来构建、编辑并检查 macOS 键盘布局。
 
 ## 运行它的三种方式
@@ -19,10 +21,16 @@
 - 带一键自动修复的验证；PNG 和参考表导出
 - 提供 24 种语言的界面
 
+- **保存 vs. 另存为** — 保存覆盖当前文件；另存为创建副本。
+## 隐私
+
+**桌面应用**不收集任何数据，可完全离线使用。**托管 Web 应用** [keymano.ys.contact](https://keymano.ys.contact) 可选使用 **Google Analytics**（匿名页面访问统计）。你的 `.keylayout` 工作不会离开浏览器。自托管实例默认无分析，除非运营者启用。见 [PRIVACY.md](../../PRIVACY.md)。
+
 ## 链接
 
 - 🌍 在线 Web 应用：<https://keymano.ys.contact>
 - 📦 下载：<https://github.com/ysalitrynskyi/keymano/releases>
+- 📘 入门（英文、通俗）: [Getting Started](../../docs/GETTING_STARTED.md)
 - 📖 完整文档（英文）：[README](../../README.md)
 - 🐙 源代码：<https://github.com/ysalitrynskyi/keymano>
 

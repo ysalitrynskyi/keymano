@@ -23,8 +23,8 @@ React Native is mobile-first — wrong tool for desktop. Dropped.
 
 | Concern | Choice | Why |
 |---|---|---|
-| Framework | React 18 + TypeScript | Largest ecosystem, shadcn built for it |
-| Bundler/dev | Vite | Fast HMR, Tauri-recommended |
+| Framework | React 19 + TypeScript 6 | Largest ecosystem, shadcn-compatible |
+| Bundler/dev | Vite 8 | Fast HMR, Tauri-recommended |
 | Styling | Tailwind CSS v4 | Fast, consistent, themeable |
 | Components | shadcn/ui (Radix primitives) | Copy-in components, full control, accessible (dialogs, popovers, tabs, command palette, tooltip, dropdown) |
 | Icons | lucide-react | Matches shadcn |
@@ -52,7 +52,7 @@ See [13](13-testing-and-qa.md) for the full strategy + coverage gates.
 
 | Concern | Crate | Why |
 |---|---|---|
-| XML parse/emit | `quick-xml` | Fast, streaming, control over output formatting + comments |
+| XML parse/emit | `quick-xml` 0.39 | Fast, streaming, control over output formatting + comments (`Event::GeneralRef` ignored — non-validating parser) |
 | Plist (bundle Info.plist) | `plist` | Read/write XML plists |
 | Serde | `serde` + `serde_json` | Geometry JSON, command (de)serialization |
 | Error | `thiserror` + `anyhow` | Ergonomic errors |

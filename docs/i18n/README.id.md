@@ -2,6 +2,8 @@
 
 > 🌐 Ini adalah ringkasan terjemahan. Dokumentasi lengkap tersedia dalam bahasa Inggris: **[README](../../README.md)**.
 
+> 🟢 **Baru di GitHub atau bukan pengembang?** Baca **[panduan memulai (Bahasa Inggris)](../../docs/GETTING_STARTED.md)** yang mudah dipahami.
+
 **Keymano** adalah editor lintas platform, sumber terbuka, dan gratis untuk file `.keylayout` macOS serta paket keyboard `.bundle` — alternatif sumber terbuka untuk Ukelele. Buat, edit, dan periksa tata letak keyboard macOS dengan keyboard langsung yang dapat diklik, di macOS, Windows, Linux, atau langsung di peramban Anda.
 
 ## Tiga cara menjalankannya
@@ -19,10 +21,16 @@
 - Validasi dengan perbaikan otomatis satu klik; ekspor PNG dan lembar referensi
 - Antarmuka dalam 24 bahasa
 
+- **Simpan vs. Simpan Sebagai** — Simpan menimpa file saat ini; Simpan Sebagai membuat salinan.
+## Privasi
+
+**Aplikasi desktop** tidak mengumpulkan apa pun dan berjalan offline. **Aplikasi web yang di-host** di [keymano.ys.contact](https://keymano.ys.contact) secara opsional memakai **Google Analytics** (statistik tampilan halaman anonim). Pekerjaan `.keylayout` Anda tidak pernah meninggalkan browser. Instansi self-host tidak punya analitik kecuali operator mengaktifkannya. Lihat [PRIVACY.md](../../PRIVACY.md).
+
 ## Tautan
 
 - 🌍 Aplikasi web langsung: <https://keymano.ys.contact>
 - 📦 Unduhan: <https://github.com/ysalitrynskyi/keymano/releases>
+- 📘 Memulai (Inggris, sederhana): [Getting Started](../../docs/GETTING_STARTED.md)
 - 📖 Dokumentasi lengkap (bahasa Inggris): [README](../../README.md)
 - 🐙 Kode sumber: <https://github.com/ysalitrynskyi/keymano>
 

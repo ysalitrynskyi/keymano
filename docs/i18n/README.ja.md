@@ -2,6 +2,8 @@
 
 > 🌐 これは翻訳版の要約です。完全なドキュメントは英語です: **[README](../../README.md)**。
 
+> 🟢 **GitHub が初めて、または開発者ではない方へ** — 平易な英語の **[はじめにガイド](../../docs/GETTING_STARTED.md)** をお読みください。
+
 **Keymano** は、macOS の `.keylayout` ファイルと `.bundle` キーボードパッケージのための、無料のオープンソースなクロスプラットフォームエディタです。Ukelele のオープンソース代替として、macOS、Windows、Linux、またはブラウザ上で、ライブでクリック可能なキーボードを使って macOS のキーボードレイアウトを作成、編集、検査できます。
 
 ## 実行する 3 つの方法
@@ -19,10 +21,16 @@
 - ワンクリック自動修復付きの検証; PNG とリファレンスシートのエクスポート
 - 24 言語のインターフェース
 
+- **保存 vs. 別名で保存** — 保存は現在のファイルを上書き、別名で保存はコピーを作成します。
+## プライバシー
+
+**デスクトップアプリ**は何も収集せずオフラインで動作します。**ホストされた Web アプリ** [keymano.ys.contact](https://keymano.ys.contact) は任意で **Google Analytics**（匿名のページ閲覧統計）を使用します。`.keylayout` の作業はブラウザから出ません。自己ホストでは運用者が有効にしない限り分析はありません。[PRIVACY.md](../../PRIVACY.md) を参照。
+
 ## リンク
 
 - 🌍 ライブ Web アプリ: <https://keymano.ys.contact>
 - 📦 ダウンロード: <https://github.com/ysalitrynskyi/keymano/releases>
+- 📘 はじめに（英語・平易）: [Getting Started](../../docs/GETTING_STARTED.md)
 - 📖 完全なドキュメント（英語）: [README](../../README.md)
 - 🐙 ソースコード: <https://github.com/ysalitrynskyi/keymano>
 

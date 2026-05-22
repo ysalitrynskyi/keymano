@@ -2,6 +2,8 @@
 
 > 🌐 Đây là bản tóm tắt đã được dịch. Tài liệu đầy đủ bằng tiếng Anh: **[README](../../README.md)**.
 
+> 🟢 **Mới dùng GitHub hoặc không phải lập trình viên?** Đọc **[hướng dẫn bắt đầu (tiếng Anh)](../../docs/GETTING_STARTED.md)** dễ hiểu.
+
 **Keymano** là một trình chỉnh sửa miễn phí, mã nguồn mở, đa nền tảng dành cho các tệp `.keylayout` của macOS và các gói bàn phím `.bundle` — một lựa chọn thay thế mã nguồn mở cho Ukelele. Tạo, chỉnh sửa và kiểm tra các bố cục bàn phím macOS với một bàn phím trực quan, có thể nhấp được, trên macOS, Windows, Linux, hoặc ngay trong trình duyệt của bạn.
 
 ## Ba cách để chạy nó
@@ -19,10 +21,16 @@
 - Kiểm tra hợp lệ với tự sửa lỗi bằng một cú nhấp; xuất PNG và phiếu tham chiếu
 - Giao diện bằng 24 ngôn ngữ
 
+- **Lưu vs. Lưu thành** — Lưu ghi đè tệp hiện tại; Lưu thành tạo bản sao.
+## Quyền riêng tư
+
+**Ứng dụng desktop** không thu thập gì và chạy ngoại tuyến. **Ứng dụng web được lưu trữ** tại [keymano.ys.contact](https://keymano.ys.contact) tùy chọn dùng **Google Analytics** (thống kê lượt xem trang ẩn danh). Công việc `.keylayout` của bạn không rời trình duyệt. Tự lưu trữ mặc định không có phân tích trừ khi người vận hành bật. Xem [PRIVACY.md](../../PRIVACY.md).
+
 ## Liên kết
 
 - 🌍 Ứng dụng web trực tiếp: <https://keymano.ys.contact>
 - 📦 Tải xuống: <https://github.com/ysalitrynskyi/keymano/releases>
+- 📘 Bắt đầu (tiếng Anh, đơn giản): [Getting Started](../../docs/GETTING_STARTED.md)
 - 📖 Tài liệu đầy đủ (tiếng Anh): [README](../../README.md)
 - 🐙 Mã nguồn: <https://github.com/ysalitrynskyi/keymano>
 

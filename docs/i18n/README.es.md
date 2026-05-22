@@ -2,6 +2,8 @@
 
 > 🌐 Este es un resumen traducido. La documentación completa está en inglés: **[README](../../README.md)**.
 
+> 🟢 **¿Nuevo en GitHub o no eres desarrollador?** Lee la **[guía de inicio (inglés)](../../docs/GETTING_STARTED.md)** en lenguaje sencillo.
+
 **Keymano** es un editor gratuito, de código abierto y multiplataforma para archivos `.keylayout` de macOS y paquetes de teclado `.bundle` — una alternativa de código abierto a Ukelele. Compila, edita e inspecciona distribuciones de teclado de macOS con un teclado en vivo e interactivo, en macOS, Windows, Linux o directamente en tu navegador.
 
 ## Tres maneras de ejecutarlo
@@ -19,10 +21,16 @@
 - Validación con autorreparación con un solo clic; exportación a PNG y a hoja de referencia
 - Interfaz en 24 idiomas
 
+- **Guardar vs. Guardar como** — Guardar sobrescribe el archivo actual; Guardar como crea una copia.
+## Privacidad
+
+La **app de escritorio** no recopila nada y funciona sin conexión. La **app web alojada** en [keymano.ys.contact](https://keymano.ys.contact) usa opcionalmente **Google Analytics** (estadísticas anónimas de páginas). Tu trabajo `.keylayout` nunca sale del navegador. Las instancias autoalojadas no tienen analítica salvo que el operador la active. Ver [PRIVACY.md](../../PRIVACY.md).
+
 ## Enlaces
 
 - 🌍 Aplicación web en vivo: <https://keymano.ys.contact>
 - 📦 Descargas: <https://github.com/ysalitrynskyi/keymano/releases>
+- 📘 Inicio (inglés, sencillo): [Getting Started](../../docs/GETTING_STARTED.md)
 - 📖 Documentación completa (inglés): [README](../../README.md)
 - 🐙 Código fuente: <https://github.com/ysalitrynskyi/keymano>
 

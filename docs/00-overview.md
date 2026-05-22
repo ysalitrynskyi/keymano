@@ -56,7 +56,7 @@ Reimplements Ukelele's capability with original code on a modern portable stack.
 - [x] App UI internationalized (i18next) — `en` + 23 translated locales (de/fr/es/it/pt/nl/pl/uk/ru/ja/zh-Hans/zh-Hant/ko/hi/ar/bn/id/ur/tr/vi/fa/ta/mr; RTL-aware `dir`); key-parity + placeholder-integrity tests green
 - [x] Recent files on Welcome (file-backed docs, persisted) + per-page guided **Help** tour with first-run nudge
 - [x] App-level Preferences (theme light/dark/system, keycap font, language); flat low-band background
-- [x] Test-as-you-go: 120+ Rust tests (parse / serialize / modifier / resolve / validate / bundle / templates / golden round-trips / robustness + fuzz) + 90+ frontend tests, ESLint + clippy + cargo-fmt clean, ≥90% line coverage gate on the core in CI, browser + desktop click-through review ([13](13-testing-and-qa.md))
+- [x] Test-as-you-go: 129 Rust tests (core unit + integration + session round-trips + robustness) + 136 frontend tests (vitest), ESLint + clippy + cargo-fmt clean, ≥90% line coverage gate on the core in CI, browser + desktop click-through review ([13](13-testing-and-qa.md))
 
 ## Reading order for implementer
 
