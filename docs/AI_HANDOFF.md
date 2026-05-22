@@ -99,9 +99,9 @@ cargo test --workspace
 pnpm build
 ```
 
-Expect ~131 Rust tests (workspace) and **127** vitest tests (the web suite now
-drives the real core through wasm). CI also runs coverage gates (core ≥90%,
-frontend ≥80%).
+Expect ~131 Rust tests (workspace) and ~139 vitest tests (the web suite drives
+the real core through wasm, plus a deploy-CSP guard that renders the real nginx
+entrypoint to a temp dir). CI also runs coverage gates (core ≥90%, frontend ≥80%).
 
 ---
 
