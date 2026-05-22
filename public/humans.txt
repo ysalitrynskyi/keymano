@@ -1,0 +1,13 @@
+/* TEAM */
+  Author: Yevhen Salitrynskyi
+  Site: https://github.com/ysalitrynskyi
+  Source: https://github.com/ysalitrynskyi/keymano
+
+/* SITE */
+  Name: Keymano
+  Description: Open-source, cross-platform editor for macOS .keylayout files and
+               .bundle keyboard packages — a Ukelele alternative.
+  License: Apache-2.0
+  Standards: HTML5, ES2022, WAI-ARIA
+  Components: Tauri 2, Rust, React, TypeScript, Vite, Tailwind CSS
+  Language: 24 locales

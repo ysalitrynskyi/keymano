@@ -1,0 +1,95 @@
+# ===========================================
+# KEYMANO — PRODUCTION DEPLOYMENT
+# ===========================================
+#
+# Deploy via Portainer, Docker Compose, or any container orchestrator.
+# The image is built automatically by GitHub Actions (push to main → :latest,
+# git tag v* → :MAJOR.MINOR / :MAJOR.MINOR.PATCH + :latest) for amd64 + arm64.
+#
+# Quick start:
+#   1. Copy .env.example to .env and set CLOUDFLARE_TUNNEL_TOKEN
+#   2. docker compose -f docker-compose.prod.yml up -d
+#
+# For Portainer:
+#   1. Stacks → Add stack → paste this file
+#   2. Add CLOUDFLARE_TUNNEL_TOKEN under Environment variables
+#   3. Deploy. The image is pulled from GHCR; no local build needed.
+#
+# Required Environment Variables:
+#   CLOUDFLARE_TUNNEL_TOKEN - Cloudflare Zero Trust tunnel token
+#
+# Optional Environment Variables:
+#   KEYMANO_IMAGE     - override the image/tag
+#                       (default: ghcr.io/ysalitrynskyi/keymano:latest)
+#   GA_MEASUREMENT_ID - Google Analytics GA4 id (e.g. G-XXXXXXXXXX). Empty/unset
+#                       (default) serves a same-origin, cookie-free page with no
+#                       analytics. Set it + restart to inject the Google tag and
+#                       widen the CSP to Google's analytics origins.
+#
+# Cloudflare Tunnel route (configure in the Zero Trust dashboard):
+#   - keymano.ys.contact -> http://keymano:80
+#
+# This serves the in-browser build of Keymano (the full UI against an in-memory
+# mock backend). The native desktop app is downloaded from Releases, not here.
+
+# Cap container log growth so it can never fill the host disk over time
+# (Docker's default json-file driver is unbounded). ~30 MB max per service.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ===========================================
+  # Keymano web app (static SPA behind nginx)
+  # ===========================================
+  # Note on storage: this is a static site with no upload endpoint and no
+  # backend — files opened in Keymano are read in the browser and never sent to
+  # the server, so nothing user-supplied is ever stored in the container. The
+  # only writable spot is an ephemeral /tmp (tmpfs, capped below), and nginx
+  # rejects request bodies over 1m (see docker/nginx.conf) so no large upload
+  # can be buffered to disk.
+  keymano:
+    image: ${KEYMANO_IMAGE:-ghcr.io/ysalitrynskyi/keymano:latest}
+    container_name: keymano
+    restart: unless-stopped
+    # Optional web analytics — OFF unless GA_MEASUREMENT_ID is set in .env.
+    # Toggle by changing the value and `docker compose up -d` (recreate) or
+    # restarting the container.
+    environment:
+      GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+    logging: *default-logging
+    # Ephemeral, RAM-backed, size-capped scratch — nothing here survives a
+    # restart, so transient files can't accumulate on the host disk.
+    tmpfs:
+      - /tmp:size=16m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - keymano-network
+
+  # ===========================================
+  # Cloudflare Tunnel (Zero Trust Access)
+  # ===========================================
+  # Routes traffic to Keymano without exposing any host ports.
+  # Configure the route in the Cloudflare Zero Trust dashboard:
+  #   - keymano.ys.contact -> http://keymano:80
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: keymano_cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    logging: *default-logging
+    depends_on:
+      - keymano
+    networks:
+      - keymano-network
+
+networks:
+  keymano-network:
+    driver: bridge

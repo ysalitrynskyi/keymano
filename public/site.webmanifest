@@ -1,0 +1,19 @@
+{
+  "name": "Keymano — Keyboard Layout Editor",
+  "short_name": "Keymano",
+  "description": "Open-source, cross-platform editor for macOS .keylayout files and .bundle keyboard packages, with a live clickable keyboard. A Ukelele alternative for macOS, Windows, Linux, and the browser.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fbf9f3",
+  "theme_color": "#e08b3c",
+  "categories": ["productivity", "utilities", "developer"],
+  "lang": "en",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ]
+}

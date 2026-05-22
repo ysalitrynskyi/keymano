@@ -1,0 +1,275 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────
+   Keymano — "classic instrument" theme. Warm ivory + ink, burnished amber
+   accent, serif display type, beveled physical keycaps. Light + dark via
+   `.dark` on <html>.
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+  /* parchment / daylight */
+  --bg: #f3efe6;
+  --bg-tint: #e9e2d2;
+  --panel: #fbf9f3;
+  --panel-2: #efe9db;
+  --border: #d8cfbd;
+  --border-strong: #c4b89f;
+  --text: #2a241c;
+  --text-muted: #837a68;
+  --accent: #b5562a; /* burnt sienna */
+  --accent-soft: #c9742f;
+  --accent-fg: #fbf7ef;
+  --gold: #a98342;
+
+  /* background hairline strength (light theme) */
+  --hairline-fine: color-mix(in srgb, var(--text) 2.5%, transparent);
+  --hairline-wide: color-mix(in srgb, var(--text) 1.8%, transparent);
+
+  --key-fill-top: #ffffff;
+  --key-fill-bot: #ece4d3;
+  --key-fill-active-top: #fdeede;
+  --key-fill-active-bot: #f4d8b8;
+  --key-stroke: #c8bda6;
+  --key-text: #2a241c;
+  --key-modifier-top: #ece6d8;
+  --key-modifier-bot: #ddd3bf;
+  --key-special-top: #f1ece0;
+  --key-special-bot: #e3dac6;
+  --key-dead: #b5562a;
+  --key-bevel: rgba(255, 255, 255, 0.85);
+  --key-shadow: rgba(70, 55, 35, 0.22);
+
+  --shadow-panel: 0 1px 2px rgba(70, 55, 35, 0.06), 0 8px 24px rgba(70, 55, 35, 0.06);
+
+  /* logo — light variant: cream keyboard body, light caps, dark text */
+  --logo-plate-0: #fffaf0;
+  --logo-plate-1: #efe2c8;
+  --logo-key-0: #e89a3f;
+  --logo-key-1: #cf6a1c;
+  --logo-cap-0: #eadfc8;
+  --logo-cap-1: #d9cbac;
+  --logo-cap-text: #7c6a47;
+  --logo-glow: #e8943a;
+}
+
+.dark {
+  /* ink / lamplight */
+  --bg: #19150f;
+  --bg-tint: #211b13;
+  --panel: #221c14;
+  --panel-2: #2b2418;
+  --border: #3a3122;
+  --border-strong: #4a3f2c;
+  --text: #ece2cf;
+  --text-muted: #a3977f;
+  --accent: #e08b3c; /* warm amber lamp */
+  --accent-soft: #c9742f;
+  --accent-fg: #1a1206;
+  --gold: #d8a85a;
+
+  /* dark theme: lighter text → lines read stronger, so dial them down */
+  --hairline-fine: color-mix(in srgb, var(--text) 1.5%, transparent);
+  --hairline-wide: color-mix(in srgb, var(--text) 1%, transparent);
+
+  --key-fill-top: #322a1d;
+  --key-fill-bot: #251f15;
+  --key-fill-active-top: #4a3a22;
+  --key-fill-active-bot: #382a18;
+  --key-stroke: #463c29;
+  --key-text: #ece2cf;
+  --key-modifier-top: #261f16;
+  --key-modifier-bot: #1d180f;
+  --key-special-top: #2a2317;
+  --key-special-bot: #211b12;
+  --key-dead: #e08b3c;
+  --key-bevel: rgba(255, 228, 180, 0.12);
+  --key-shadow: rgba(0, 0, 0, 0.45);
+
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  /* logo — dark variant: ink keyboard body, dim embossed caps */
+  --logo-plate-0: #271810;
+  --logo-plate-1: #110b06;
+  --logo-key-0: #f0ad53;
+  --logo-key-1: #d96f1f;
+  --logo-cap-0: #3c2c1c;
+  --logo-cap-1: #241a10;
+  --logo-cap-text: #8a7048;
+  --logo-glow: #ff9f2e;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  /* Solid flat fill (a single color cannot band) + a crisp vector line motif
+     in ::before. No smooth gradient ramps anywhere → no WKWebView banding. */
+  background-color: var(--bg);
+  color: var(--text);
+  font-family:
+    "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, -apple-system, Roboto,
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Vector engraving: two faint diagonal hairline grids (a fine 13px set + a
+   heavier 52px set) drawn with HARD color stops — each line is a 1px solid edge
+   with transparent gaps, so there is no gradient to band at any resolution.
+   Scales crisply on any display; pure CSS vector. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(45deg, var(--hairline-fine) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(-45deg, var(--hairline-wide) 0 1px, transparent 1px 52px);
+}
+
+/* A faint, fixed paper/metal grain. It's a small *tiled* feTurbulence bitmap
+   (160px, repeated) — no gradient, so nothing to band — that just adds a
+   tactile tooth to the flat fill. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Native <select> with a balanced custom chevron — the OS arrow sits flush in
+   the corner with uneven padding; this gives equal insets and mirrors for RTL. */
+.km-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23998f7a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 14px;
+  padding-inline-start: 0.75rem;
+  padding-inline-end: 2rem;
+}
+[dir="rtl"] .km-select {
+  background-position: left 0.6rem center;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Editorial serif for the wordmark + headings — gives the "classic" voice. */
+.font-display {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Georgia, ui-serif, serif;
+  letter-spacing: 0.01em;
+}
+
+/* Brand wordmark — a touch tighter than body display type, with the second
+   half in the accent so the lockup reads as a mark, not a heading. */
+.km-wordmark {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Georgia, ui-serif, serif;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+.km-wordmark-accent {
+  color: var(--accent);
+}
+
+.hairline-accent {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent) 30%,
+    var(--gold) 60%,
+    transparent
+  );
+  opacity: 0.55;
+}
+
+/* First-run Help nudge — a slow, soft amber pulse shown only after the user has
+   been idle; it's removed (in React) the moment they interact. */
+.km-help-pulse {
+  animation: km-help-pulse 3.2s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+@keyframes km-help-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); }
+  50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+@keyframes km-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes km-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes km-ring {
+  to { transform: rotate(360deg); }
+}
+.km-float { animation: km-float 3.4s ease-in-out infinite; }
+.km-fade-in { animation: km-fade-in 0.7s ease both; }
+.km-spin { animation: km-ring 9s linear infinite; transform-origin: 50% 50%; }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* clickable affordances: native controls don't show a pointer cursor */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+select,
+label[for] {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+input[type="text"],
+input:not([type]),
+textarea {
+  cursor: text;
+}
+
+/* visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* keycap hover affordance */
+[data-keycap="1"] {
+  transition: filter 0.12s ease;
+}
+[data-keycap="1"]:hover {
+  filter: brightness(1.18);
+}
+
+/* range slider thumb */
+input[type="range"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+}

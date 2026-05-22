@@ -1,0 +1,22 @@
+[workspace]
+members = ["crates/keylayout-core", "crates/keymano-session", "src-tauri"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/ysalitrynskyi/keymano"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Stay on 0.39 until plist supports 0.40 (plist 1.9 pins ^0.39; 0.40 regresses the tree).
+quick-xml = "0.39"
+plist = "1.7"
+thiserror = "2"
+anyhow = "1"
+
+[profile.release]
+strip = true
+lto = true

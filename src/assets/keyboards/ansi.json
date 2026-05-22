@@ -1,0 +1,117 @@
+{
+  "id": "ansi",
+  "name": "ANSI (US)",
+  "type": "ANSI",
+  "unit": 54,
+  "rows": [
+    {
+      "y": 0,
+      "keys": [
+        { "code": 53, "x": 0, "label": "esc", "kind": "special" },
+        { "code": 122, "x": 1.25, "label": "F1", "kind": "special" },
+        { "code": 120, "x": 2.25, "label": "F2", "kind": "special" },
+        { "code": 99, "x": 3.25, "label": "F3", "kind": "special" },
+        { "code": 118, "x": 4.25, "label": "F4", "kind": "special" },
+        { "code": 96, "x": 5.5, "label": "F5", "kind": "special" },
+        { "code": 97, "x": 6.5, "label": "F6", "kind": "special" },
+        { "code": 98, "x": 7.5, "label": "F7", "kind": "special" },
+        { "code": 100, "x": 8.5, "label": "F8", "kind": "special" },
+        { "code": 101, "x": 9.75, "label": "F9", "kind": "special" },
+        { "code": 109, "x": 10.75, "label": "F10", "kind": "special" },
+        { "code": 103, "x": 11.75, "label": "F11", "kind": "special" },
+        { "code": 111, "x": 12.75, "label": "F12", "kind": "special" }
+      ]
+    },
+    {
+      "y": 1.25,
+      "keys": [
+        { "code": 50, "x": 0, "kind": "ordinary" },
+        { "code": 18, "x": 1, "kind": "ordinary" },
+        { "code": 19, "x": 2, "kind": "ordinary" },
+        { "code": 20, "x": 3, "kind": "ordinary" },
+        { "code": 21, "x": 4, "kind": "ordinary" },
+        { "code": 23, "x": 5, "kind": "ordinary" },
+        { "code": 22, "x": 6, "kind": "ordinary" },
+        { "code": 26, "x": 7, "kind": "ordinary" },
+        { "code": 28, "x": 8, "kind": "ordinary" },
+        { "code": 25, "x": 9, "kind": "ordinary" },
+        { "code": 29, "x": 10, "kind": "ordinary" },
+        { "code": 27, "x": 11, "kind": "ordinary" },
+        { "code": 24, "x": 12, "kind": "ordinary" },
+        { "code": 51, "x": 13, "w": 2, "label": "delete", "kind": "special" }
+      ]
+    },
+    {
+      "y": 2.25,
+      "keys": [
+        { "code": 48, "x": 0, "w": 1.5, "label": "tab", "kind": "special" },
+        { "code": 12, "x": 1.5, "kind": "ordinary" },
+        { "code": 13, "x": 2.5, "kind": "ordinary" },
+        { "code": 14, "x": 3.5, "kind": "ordinary" },
+        { "code": 15, "x": 4.5, "kind": "ordinary" },
+        { "code": 17, "x": 5.5, "kind": "ordinary" },
+        { "code": 16, "x": 6.5, "kind": "ordinary" },
+        { "code": 32, "x": 7.5, "kind": "ordinary" },
+        { "code": 34, "x": 8.5, "kind": "ordinary" },
+        { "code": 31, "x": 9.5, "kind": "ordinary" },
+        { "code": 35, "x": 10.5, "kind": "ordinary" },
+        { "code": 33, "x": 11.5, "kind": "ordinary" },
+        { "code": 30, "x": 12.5, "kind": "ordinary" },
+        { "code": 42, "x": 13.5, "w": 1.5, "kind": "ordinary" }
+      ]
+    },
+    {
+      "y": 3.25,
+      "keys": [
+        { "code": 57, "x": 0, "w": 1.75, "label": "caps lock", "kind": "modifier" },
+        { "code": 0, "x": 1.75, "kind": "ordinary" },
+        { "code": 1, "x": 2.75, "kind": "ordinary" },
+        { "code": 2, "x": 3.75, "kind": "ordinary" },
+        { "code": 3, "x": 4.75, "kind": "ordinary" },
+        { "code": 5, "x": 5.75, "kind": "ordinary" },
+        { "code": 4, "x": 6.75, "kind": "ordinary" },
+        { "code": 38, "x": 7.75, "kind": "ordinary" },
+        { "code": 40, "x": 8.75, "kind": "ordinary" },
+        { "code": 37, "x": 9.75, "kind": "ordinary" },
+        { "code": 41, "x": 10.75, "kind": "ordinary" },
+        { "code": 39, "x": 11.75, "kind": "ordinary" },
+        { "code": 36, "x": 12.75, "w": 2.25, "label": "return", "kind": "special" }
+      ]
+    },
+    {
+      "y": 4.25,
+      "keys": [
+        { "code": 56, "x": 0, "w": 2.25, "label": "shift", "kind": "modifier" },
+        { "code": 6, "x": 2.25, "kind": "ordinary" },
+        { "code": 7, "x": 3.25, "kind": "ordinary" },
+        { "code": 8, "x": 4.25, "kind": "ordinary" },
+        { "code": 9, "x": 5.25, "kind": "ordinary" },
+        { "code": 11, "x": 6.25, "kind": "ordinary" },
+        { "code": 45, "x": 7.25, "kind": "ordinary" },
+        { "code": 46, "x": 8.25, "kind": "ordinary" },
+        { "code": 43, "x": 9.25, "kind": "ordinary" },
+        { "code": 47, "x": 10.25, "kind": "ordinary" },
+        { "code": 44, "x": 11.25, "kind": "ordinary" },
+        { "code": 60, "x": 12.25, "w": 2.75, "label": "shift", "kind": "modifier" }
+      ]
+    },
+    {
+      "y": 5.25,
+      "keys": [
+        { "code": 59, "x": 0, "w": 1.25, "label": "control", "kind": "modifier" },
+        { "code": 58, "x": 1.25, "w": 1.25, "label": "option", "kind": "modifier" },
+        { "code": 55, "x": 2.5, "w": 1.25, "label": "command", "kind": "modifier" },
+        { "code": 49, "x": 3.75, "w": 5.5, "label": "space", "kind": "special" },
+        { "code": 54, "x": 9.25, "w": 1.25, "label": "command", "kind": "modifier" },
+        { "code": 61, "x": 10.5, "w": 1.25, "label": "option", "kind": "modifier" },
+        { "code": 123, "x": 12, "label": "←", "kind": "special" },
+        { "code": 125, "x": 13, "label": "↓", "kind": "special" },
+        { "code": 124, "x": 14, "label": "→", "kind": "special" }
+      ]
+    },
+    {
+      "y": 4.25,
+      "keys": [{ "code": 126, "x": 13, "label": "↑", "kind": "special" }]
+    }
+  ]
+}

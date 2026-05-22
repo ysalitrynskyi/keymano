@@ -1,0 +1,49 @@
+# Keymano
+
+> Keymano is a free, open-source, cross-platform editor for macOS keyboard
+> layouts. It reads and writes Apple's native `.keylayout` XML and `.bundle`
+> packages with a live, clickable keyboard — a modern alternative to Ukelele
+> that also runs on Windows, Linux, and in the browser. No Xcode, no Apple
+> Developer account, no Carbon APIs.
+
+## What it does
+
+- Visual per-key editor for every modifier combination (Shift, Option, Control, Command, Caps) and dead-key state.
+- Reads and writes Apple `.keylayout` (the `KeyboardLayout.dtd` XML format) and `.bundle` keyboard packages, losslessly round-tripping comments, modifier maps, dead-key state machines, and Unicode/code-point outputs.
+- Dead keys and actions: make-dead-key flow, terminators, and housekeeping (remove unused states/actions, inject the special-key control-character outputs macOS expects).
+- ANSI / ISO / JIS physical geometries; base-map inheritance (unlink/relink); find-by-output; copy/paste/swap; undo/redo.
+- Live `.keylayout` XML preview with validation and one-click auto-repair.
+- Export a PNG of the current view or a monochrome reference sheet.
+- UI translated into 24 languages, including right-to-left scripts.
+
+## Who it is for
+
+- Anyone searching for a "Ukelele alternative" or "Ukelele replacement" that runs on Windows or Linux.
+- People who want to create a custom macOS keyboard layout, edit a `.keylayout` file, or build dead keys, accents, and custom symbols.
+- Users who need to open, inspect, or repair an existing `.keylayout` / `.bundle` without a Mac.
+
+## How to run it
+
+- Hosted (browser, instant, no install): https://keymano.ys.contact
+- Desktop app (macOS / Windows / Linux): download from GitHub Releases.
+- From source: `pnpm install && pnpm tauri dev` (Tauri 2 + Rust core + React).
+- Self-host the web build: a multi-arch image at `ghcr.io/ysalitrynskyi/keymano` behind a Cloudflare Tunnel (see `docker-compose.prod.yml`).
+
+## Architecture
+
+- `keylayout-core` — pure Rust: model, parse, serialize, modifier resolution, dead-key resolution, validation + repair, templates, ids, special keys, bundles. No UI, fully unit-tested.
+- `keymano-session` — Tauri-free document session (open docs, undo/redo, edits).
+- `src-tauri` — thin Tauri command shell over the session (desktop).
+- `src` — React + TypeScript frontend (clickable keyboard, pages, i18n). The browser build runs the full UI against an in-memory mock backend.
+
+## Notes
+
+- macOS ships its built-in layouts (U.S., Russian, …) in a sealed binary bundle that third-party editors cannot read. Keymano lists them so you can start a fresh layout named after one, but to edit a real layout, open its `.keylayout` / `.bundle` file directly.
+- License: Apache-2.0. Independent project; not affiliated with or endorsed by Apple or SIL International. "Apple", "macOS", and "Ukelele" are trademarks of their respective owners.
+
+## Links
+
+- Live app: https://keymano.ys.contact
+- Source code: https://github.com/ysalitrynskyi/keymano
+- Releases: https://github.com/ysalitrynskyi/keymano/releases
+- Author: Yevhen Salitrynskyi

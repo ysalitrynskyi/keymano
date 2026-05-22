@@ -1,0 +1,108 @@
+# Getting started (plain-English guide)
+
+**Keymano** is a free editor for custom macOS keyboard layouts (`.keylayout` files
+and `.bundle` packages). It is a cross-platform **Ukelele alternative** — use it in
+your browser or install the desktop app on macOS, Windows, or Linux.
+
+New to GitHub, or not a developer? This page explains how to get Keymano and use
+it without needing to know any of the technical stuff. If a word looks unfamiliar,
+check the [glossary](#glossary) at the bottom.
+
+There are three ways to use Keymano. Most people want the **first** one.
+
+---
+
+## 1. Just install the app (recommended)
+
+You do **not** need a GitHub account, git, or any developer tools.
+
+1. Open the **Releases** page:
+   <https://github.com/ysalitrynskyi/keymano/releases>
+2. Find the newest release at the top. Under it, click **“Assets”** to expand the
+   list of downloads.
+3. Download the file for your computer:
+   - **macOS** → the file ending in **`.dmg`**
+   - **Windows** → the file ending in **`.msi`** (or **`.exe`**)
+   - **Linux** → the file ending in **`.AppImage`** or **`.deb`**
+4. Open the downloaded file and install it like any normal app.
+
+### First launch on macOS (important)
+
+Keymano is **not signed** with an Apple Developer certificate (that costs money
+and isn't needed for a free, open tool). macOS will warn you the first time. To
+open it anyway:
+
+- **Right-click** (or Control-click) the Keymano app → choose **Open** → in the
+  dialog, click **Open** again. You only do this once.
+- If macOS still refuses, open **Terminal** and paste:
+  ```
+  xattr -dr com.apple.quarantine /Applications/Keymano.app
+  ```
+  then press Return and try again.
+
+This is normal for free open-source Mac apps — the code is fully public, so you
+can see exactly what it does.
+
+---
+
+## 2. Try it in your browser (no install)
+
+Just want a quick look? Open **<https://keymano.ys.contact>** — the whole app
+runs in your browser. You can open a `.keylayout` file, edit it, and download the
+result. (Installing a layout into the system still needs the desktop app; the
+browser just downloads the file for you to place yourself.)
+
+---
+
+## 3. Build it yourself (for developers)
+
+If you're comfortable with a terminal and want to compile from the source code,
+see **[Build from source](../README.md#build-from-source)** in the main README.
+This is only for contributors/packagers — everyone else should use option 1 or 2.
+
+---
+
+## Using the app
+
+Once it's open, see **[Using Keymano](../README.md#using-keymano)** in the README
+for a short walk-through (start a layout, edit keys, dead keys, validate, save /
+install). The app also has a built-in **Help tour** on each page — look for the
+help button.
+
+Want sample layouts to open? The [`examples/`](../examples/) folder has a few
+ready-made phonetic Cyrillic layouts; download one and use **File → Open…**.
+
+---
+
+## Reporting a problem or asking for a feature
+
+Found a bug or want something added? You'll need a free GitHub account.
+
+1. Go to <https://github.com/ysalitrynskyi/keymano/issues>
+2. Click **“New issue”**.
+3. Give it a short title and describe:
+   - what you did,
+   - what you expected,
+   - what actually happened (a screenshot helps a lot).
+4. Click **“Submit new issue.”**
+
+For **security problems** specifically, don't open a public issue — follow
+[SECURITY.md](../SECURITY.md) instead.
+
+For questions and help, see [SUPPORT.md](../SUPPORT.md).
+
+---
+
+## Glossary
+
+- **GitHub** — the website that hosts Keymano's code and downloads.
+- **Repository (“repo”)** — the project's folder of code and files on GitHub.
+- **Release** — a published, ready-to-download version of the app. Downloads
+  live under a release's **Assets**.
+- **Asset** — a downloadable file attached to a release (the `.dmg`, `.msi`, etc.).
+- **Issue** — a public note on GitHub used to report a bug or request a feature.
+- **`.keylayout`** — Apple's keyboard-layout file (it's XML — plain text inside).
+- **`.bundle`** — a package that can hold several layouts plus names and icons.
+- **Gatekeeper** — macOS's security check that warns about unsigned apps.
+- **Source code** — the human-written instructions the app is built from.
+- **Build / compile** — turning source code into a runnable app (developers only).

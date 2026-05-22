@@ -1,0 +1,10 @@
+[package]
+name = "keymano-session"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "In-memory document session + undo/redo over keylayout-core (Tauri-free)"
+
+[dependencies]
+keylayout-core = { path = "../keylayout-core" }
+serde = { workspace = true }

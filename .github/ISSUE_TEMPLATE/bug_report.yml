@@ -1,0 +1,40 @@
+name: Bug report
+description: Something isn't working
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open '...'
+        2. Click '...'
+        3. See error
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Keymano version
+      placeholder: "e.g. 0.1.0 (About ▸ Version)"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [macOS, Windows, Linux, Web build]
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Layout file (optional)
+      description: If it involves a specific .keylayout/.bundle, attach or describe it. Do not include anything private.
