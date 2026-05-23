@@ -11,6 +11,7 @@
 - **Masaüstü uygulamasını indirin** — macOS, Windows veya Linux için [Sürümler sayfasından](https://github.com/ysalitrynskyi/keymano/releases).
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **Tarayıcınızda kullanın** — barındırılan uygulamayı **[keymano.ys.contact](https://keymano.ys.contact)** adresinde açın (bakımcı tarafından barındırılır); tam uygulama tarayıcınızda çalışır, kurulum gerekmez.
+- **Web sürümünün sınırları:** Tarayıcıda bağımsız `.keylayout` dosyalarını açabilir ve `.keylayout` veya `.bundle.zip` olarak dışa aktarabilirsiniz. Tarayıcı `.bundle` klasörlerini doğrudan içe aktaramaz, `~/Library/Keyboard Layouts/` içine kuramaz veya yüklü sistem düzenlerini gezemez. Bunlar için masaüstü uygulamasını kullanın.
 - **Kaynak koddan derleyin** — katkıda bulunacaklar için; [İngilizce README](../../README.md#build-from-source) bölümüne bakın.
 
 ## Özellikler

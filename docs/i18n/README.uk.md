@@ -11,6 +11,7 @@
 - **Завантажте настільний застосунок** — для macOS, Windows або Linux, на [сторінці Releases](https://github.com/ysalitrynskyi/keymano/releases).
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **Використовуйте його у браузері** — відкрийте розміщений застосунок на **[keymano.ys.contact](https://keymano.ys.contact)** (розміщено супроводжувачем); весь застосунок працює у браузері, без встановлення.
+- **Обмеження веб-версії:** у браузері можна відкривати окремі файли `.keylayout` і експортувати їх як `.keylayout` або `.bundle.zip`. Браузер не може напряму імпортувати папки `.bundle`, встановлювати в `~/Library/Keyboard Layouts/` або переглядати встановлені системні розкладки. Для цього використовуйте десктопний застосунок.
 - **Зберіть із вихідного коду** — для учасників; дивіться [англійський README](../../README.md#build-from-source).
 
 ## Можливості

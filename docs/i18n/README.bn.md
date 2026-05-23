@@ -11,6 +11,7 @@
 - **ডেস্কটপ অ্যাপ ডাউনলোড করুন** — macOS, Windows, বা Linux-এর জন্য, [Releases page](https://github.com/ysalitrynskyi/keymano/releases) থেকে।
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **আপনার ব্রাউজারে ব্যবহার করুন** — হোস্ট করা অ্যাপটি **[keymano.ys.contact](https://keymano.ys.contact)**-এ খুলুন (রক্ষণাবেক্ষণকারী দ্বারা হোস্ট করা); সম্পূর্ণ অ্যাপটি আপনার ব্রাউজারেই চলে, ইনস্টল করার দরকার নেই।
+- **ওয়েব সংস্করণের সীমাবদ্ধতা:** ব্রাউজারে আপনি standalone `.keylayout` ফাইল খুলতে পারেন এবং `.keylayout` বা `.bundle.zip` হিসেবে export করতে পারেন। ব্রাউজার সরাসরি `.bundle` folder import করতে পারে না, `~/Library/Keyboard Layouts/`-এ install করতে পারে না, এবং installed system layouts browse করতে পারে না। এগুলোর জন্য desktop app ব্যবহার করুন।
 - **সোর্স থেকে বিল্ড করুন** — অবদানকারীদের জন্য; [English README](../../README.md#build-from-source) দেখুন।
 
 ## বৈশিষ্ট্য

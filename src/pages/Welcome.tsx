@@ -133,7 +133,9 @@ export function WelcomePage() {
         </div>
       )}
 
-      <p className="text-xs text-[var(--text-muted)]">{t("welcome.dropHint")}</p>
+      <p className="text-xs text-[var(--text-muted)]">
+        {ipc.isTauri ? t("welcome.dropHint") : t("welcome.dropHint.web")}
+      </p>
 
       {showInstalled && <InstalledPicker onClose={() => setShowInstalled(false)} />}
     </div>

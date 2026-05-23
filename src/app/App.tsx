@@ -318,9 +318,7 @@ export function App() {
             <p className="mt-1 text-sm text-[var(--text-muted)]">
               {ipc.isTauri
                 ? t("welcome.dropHint")
-                : t("welcome.dropHint.web", {
-                    defaultValue: "Drop a .keylayout here to open.",
-                  })}
+                : t("welcome.dropHint.web")}
             </p>
           </div>
         </div>

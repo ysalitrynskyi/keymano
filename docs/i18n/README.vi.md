@@ -11,6 +11,7 @@
 - **Tải ứng dụng máy tính** — cho macOS, Windows hoặc Linux, từ [trang Releases](https://github.com/ysalitrynskyi/keymano/releases).
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **Dùng trong trình duyệt của bạn** — mở ứng dụng được lưu trữ tại **[keymano.ys.contact](https://keymano.ys.contact)** (do người duy trì lưu trữ); toàn bộ ứng dụng chạy trong trình duyệt, không cần cài đặt.
+- **Giới hạn của phiên bản web:** trong trình duyệt, bạn có thể mở các tệp `.keylayout` độc lập và xuất thành `.keylayout` hoặc `.bundle.zip`. Trình duyệt không thể nhập trực tiếp thư mục `.bundle`, không thể cài vào `~/Library/Keyboard Layouts/`, và không thể duyệt các bố cục hệ thống đã cài. Hãy dùng ứng dụng desktop cho các thao tác đó.
 - **Xây dựng từ mã nguồn** — dành cho người đóng góp; xem [README tiếng Anh](../../README.md#build-from-source).
 
 ## Tính năng

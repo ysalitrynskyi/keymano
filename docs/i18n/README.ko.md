@@ -11,6 +11,7 @@
 - **데스크톱 앱 다운로드** — macOS, Windows 또는 Linux용으로 [Releases page](https://github.com/ysalitrynskyi/keymano/releases)에서 받을 수 있습니다.
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **브라우저에서 사용** — 호스팅된 앱을 **[keymano.ys.contact](https://keymano.ys.contact)**에서 여세요(관리자가 호스팅함); 전체 앱이 브라우저에서 실행되며 설치가 필요 없습니다.
+- **웹 버전 제한:** 브라우저에서는 독립 `.keylayout` 파일을 열고 `.keylayout` 또는 `.bundle.zip`으로 내보낼 수 있습니다. 브라우저는 `.bundle` 폴더를 직접 가져오거나 `~/Library/Keyboard Layouts/`에 설치하거나 설치된 시스템 레이아웃을 탐색할 수 없습니다. 이런 작업은 데스크톱 앱을 사용하세요.
 - **소스에서 빌드** — 기여자를 위한 방법입니다. [English README](../../README.md#build-from-source)를 참조하세요.
 
 ## 기능

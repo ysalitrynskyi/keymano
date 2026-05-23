@@ -15,13 +15,13 @@ For day-to-day commands see [DEVELOP.md](DEVELOP.md). For end users see [GETTING
 
 ---
 
-## Release / git state (as of v0.2.3)
+## Release / git state (as of v0.2.4)
 
 | Item | Value |
 |------|--------|
-| Version | `0.2.3` (`package.json`, workspace `Cargo.toml`) |
+| Version | `0.2.4` (`package.json`, workspace `Cargo.toml`) |
 | `main` HEAD | latest `v*` release commit; doc / maintenance commits may follow on top |
-| Latest release commit | `fix: align browser bundle docs with real import support (v0.2.3)` |
+| Latest release commit | `chore(release): v0.2.4 — platform-aware welcome drop hint + bundle.zip wording` |
 | Tag → release | Push an annotated `vX.Y.Z` tag on a `main` commit; CI builds desktop bundles + multi-arch web image and creates the GitHub Release |
 | Container image | `ghcr.io/ysalitrynskyi/keymano:<version>` (also `:<major>.<minor>`, `:latest` per CI rules; prerelease tags don't move `:latest`) |
 | CI on push/tag | `ci.yml` + `codeql.yml`; matrix macOS / Windows / Linux |

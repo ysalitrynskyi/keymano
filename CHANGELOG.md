@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.4] — 2026-05-22
+
+### Fixed
+- **Welcome screen drop hint** in the browser no longer told you to drop a
+  `.bundle` — the web build can't import directory packages. The Welcome page
+  now picks the platform-aware hint (`welcome.dropHint.web` / `.dropHint`),
+  matching the drag overlay added in v0.2.3. Desktop wording is unchanged.
+
+### Changed
+- **Getting Started — Section 2 lead paragraph** now says the browser exports a
+  `.bundle.zip` macOS keyboard-package archive (unzip → `.bundle`), aligning the
+  intro with the "what the browser version cannot do" section below it.
+
+### Docs
+- `docs/AI_HANDOFF.md` refreshed for v0.2.4 (project state, version table).
+
 ## [0.2.3] — 2026-05-22
 
 ### Fixed
@@ -256,6 +272,7 @@ runs on macOS, Windows, Linux, and in the browser.
 - Repo hygiene: `.editorconfig`, `.gitattributes`, `.nvmrc`, `engines`, a
   `NOTICE` file, and ESM-correct `vite.config.ts`.
 
+[0.2.4]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.4
 [0.2.3]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.3
 [0.2.2]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.2
 [0.2.1]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.1

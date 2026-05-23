@@ -11,6 +11,7 @@
 - **تنزيل تطبيق سطح المكتب** — لـ macOS أو Windows أو Linux، من [صفحة الإصدارات](https://github.com/ysalitrynskyi/keymano/releases).
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **استخدامه في متصفحك** — افتح التطبيق المستضاف على **[keymano.ys.contact](https://keymano.ys.contact)** (مستضاف بواسطة المُحافظ على المشروع)؛ يعمل التطبيق الكامل في متصفحك، دون تثبيت.
+- **حدود إصدار الويب:** في المتصفح يمكنك فتح ملفات `.keylayout` مستقلة وتصديرها كـ `.keylayout` أو `.bundle.zip`. لا يستطيع المتصفح استيراد مجلدات `.bundle` مباشرة، أو التثبيت داخل `~/Library/Keyboard Layouts/`، أو تصفح التخطيطات المثبتة في النظام. لهذه الإجراءات استخدم تطبيق سطح المكتب.
 - **البناء من المصدر** — للمساهمين؛ راجع [README الإنجليزية](../../README.md#build-from-source).
 
 ## الميزات

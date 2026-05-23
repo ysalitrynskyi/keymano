@@ -60,7 +60,8 @@ all; the Terminal command above is the reliable fix.
 
 Just want a quick look? Open **<https://keymano.ys.contact>** — the whole app
 runs in your browser. You can open and edit a `.keylayout` file, save it back
-as `.keylayout`, or export it as a `.bundle` keyboard package.
+as `.keylayout`, or export it as a `.bundle.zip` macOS keyboard-package archive
+(unzip it to get a real `.bundle`).
 
 Browsers can't write into the system Keyboard Layouts folder for you, so the
 **Install** button downloads the file instead — then you drop it in yourself:
@@ -74,6 +75,18 @@ On macOS, move the result into `~/Library/Keyboard Layouts/` (in Finder press
 click **+**, and pick your layout. If it doesn't show up, log out and back in —
 macOS only re-scans that folder at login. (The desktop app does all of this for
 you with one click.)
+
+**What the browser version cannot do:**
+
+- It cannot open a `.bundle` folder/package directly. Open a standalone
+  `.keylayout` file, then export a `.bundle.zip` if you need a bundle.
+- It cannot install or uninstall layouts inside `~/Library/Keyboard Layouts/`
+  by itself.
+- It cannot browse or watch your installed system layouts.
+
+For those native filesystem actions, use the desktop app. Everything else —
+editing keys, dead keys, modifier maps, validation/repair, XML preview, and
+`.keylayout` / `.bundle.zip` export — works in the browser.
 
 ---
 

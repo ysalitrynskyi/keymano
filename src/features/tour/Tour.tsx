@@ -59,14 +59,9 @@ export function Tour({ steps, onClose }: { steps: TourStep[]; onClose: () => voi
   const back = React.useCallback(() => setI((n) => Math.max(0, n - 1)), []);
   const body =
     !ipc.isTauri && step.bodyKey === "tour.welcome.intro.body"
-      ? t("tour.welcome.intro.body.web", {
-          defaultValue:
-            "Design and edit macOS keyboard layouts. Start from a template or open a .keylayout file; use the Bundle page to export a .bundle.zip for macOS.",
-        })
+      ? t("tour.welcome.intro.body.web")
       : !ipc.isTauri && step.bodyKey === "tour.welcome.open.body"
-        ? t("tour.welcome.open.body.web", {
-            defaultValue: "Open a .keylayout from disk, or drag one anywhere onto the window.",
-          })
+        ? t("tour.welcome.open.body.web")
         : t(step.bodyKey);
 
   React.useEffect(() => {

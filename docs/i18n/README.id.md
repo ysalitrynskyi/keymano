@@ -11,6 +11,7 @@
 - **Unduh aplikasi desktop** — untuk macOS, Windows, atau Linux, dari [halaman Releases](https://github.com/ysalitrynskyi/keymano/releases).
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **Gunakan di peramban Anda** — buka aplikasi yang di-host di **[keymano.ys.contact](https://keymano.ys.contact)** (di-host oleh pemelihara); aplikasi lengkap berjalan di peramban Anda, tanpa instalasi.
+- **Batas versi web:** di browser Anda dapat membuka file `.keylayout` mandiri dan mengekspornya sebagai `.keylayout` atau `.bundle.zip`. Browser tidak dapat mengimpor folder `.bundle` secara langsung, memasang ke `~/Library/Keyboard Layouts/`, atau menelusuri layout sistem yang terpasang. Untuk itu, gunakan aplikasi desktop.
 - **Bangun dari sumber** — untuk kontributor; lihat [README bahasa Inggris](../../README.md#build-from-source).
 
 ## Fitur

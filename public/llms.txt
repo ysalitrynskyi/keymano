@@ -20,7 +20,9 @@
 
 - Anyone searching for a "Ukelele alternative" or "Ukelele replacement" that runs on Windows or Linux.
 - People who want to create a custom macOS keyboard layout, edit a `.keylayout` file, or build dead keys, accents, and custom symbols.
-- Users who need to open, inspect, or repair an existing `.keylayout` / `.bundle` without a Mac.
+- Users who need to open, inspect, or repair an existing `.keylayout` without a
+  Mac, then export a `.keylayout` or `.bundle.zip` from the browser. Native
+  `.bundle` package import/install is a desktop-app feature.
 
 ## How to run it
 
@@ -39,7 +41,7 @@
 
 ## Notes
 
-- macOS ships its built-in layouts (U.S., Russian, …) in a sealed binary bundle that third-party editors cannot read. Keymano lists them so you can start a fresh layout named after one, but to edit a real layout, open its `.keylayout` / `.bundle` file directly.
+- macOS ships its built-in layouts (U.S., Russian, …) in a sealed binary bundle that third-party editors cannot read. Keymano lists them so you can start a fresh layout named after one. To edit a real layout, open its standalone `.keylayout` in the browser; use the desktop app for direct `.bundle` packages and installed-layout folder access.
 - License: Apache-2.0. Independent project; not affiliated with or endorsed by Apple or SIL International. "Apple", "macOS", and "Ukelele" are trademarks of their respective owners.
 
 ## Links

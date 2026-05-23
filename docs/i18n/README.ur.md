@@ -11,6 +11,7 @@
 - **ڈیسک ٹاپ ایپ ڈاؤن لوڈ کریں** — macOS، Windows، یا Linux کے لیے، [Releases page](https://github.com/ysalitrynskyi/keymano/releases) سے۔
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **اسے اپنے براؤزر میں استعمال کریں** — ہوسٹ شدہ ایپ **[keymano.ys.contact](https://keymano.ys.contact)** پر کھولیں (مینٹینر کی میزبانی میں); پوری ایپ آپ کے براؤزر میں چلتی ہے، کسی انسٹالیشن کی ضرورت نہیں۔
+- **ویب ورژن کی حدیں:** براؤزر میں آپ standalone `.keylayout` فائلیں کھول سکتے ہیں اور انہیں `.keylayout` یا `.bundle.zip` کے طور پر برآمد کر سکتے ہیں۔ براؤزر براہ راست `.bundle` folder import نہیں کر سکتا، `~/Library/Keyboard Layouts/` میں install نہیں کر سکتا، اور installed system layouts browse نہیں کر سکتا۔ ان کاموں کے لیے desktop app استعمال کریں۔
 - **سورس سے بنائیں** — معاونین کے لیے; [English README](../../README.md#build-from-source) دیکھیں۔
 
 ## خصوصیات

@@ -91,8 +91,9 @@ preserved through a parse → edit → serialize round-trip.
 - **Editing aids** — Quick Entry (type characters straight onto keys), find-by-output,
   select-by-code, copy / paste / swap, and undo / redo with named actions.
 - **Templates & system layouts** — start from Standard (US) or a blank Unicode
-  layout; open installed `.keylayout` / `.bundle` files; install to and uninstall
-  (move-to-Trash) from `~/Library/Keyboard Layouts`, with a live folder watch (macOS).
+  layout; in the desktop app, open installed `.keylayout` / `.bundle` files,
+  install to and uninstall (move-to-Trash) from `~/Library/Keyboard Layouts`,
+  with a live folder watch (macOS).
 - **Export** — PNG of the current view, a monochrome reference sheet across every
   modifier map, and a live XML preview with validation and one-click auto-repair.
 - **Polished app** — recent files, light / dark / system themes, a selectable keycap
@@ -167,6 +168,14 @@ identical. Open imports a real `.keylayout`; Save/Export downloads a real
 drop the resulting `.bundle` into `~/Library/Keyboard Layouts/`).
 Browsers can't write into that folder directly, so on the web *Install* hands
 you the file to place yourself; the desktop app does it in one click.
+
+**Browser limits:** the web version cannot (1) import a `.bundle` directory
+package directly, (2) install/uninstall layouts into `~/Library/Keyboard
+Layouts/`, or (3) browse/watch installed system layouts. For those native
+filesystem actions, use the desktop app. Everything else in the editor works in
+the browser: edit `.keylayout`, validate/repair, preview XML, export
+`.keylayout`, export `.bundle.zip`, PNG/reference-sheet export, undo/redo, dead
+keys, and modifier maps.
 
 ```bash
 pnpm install
@@ -333,12 +342,14 @@ macOS only re-scans `~/Library/Keyboard Layouts` on login.
 
 Same UI **and the same Rust core** — the browser runs `keylayout-core` compiled
 to WebAssembly, so parsing/serialization/validation match the desktop app byte
-for byte. The only difference is the browser can't write into the system
-Keyboard Layouts folder (no app can from a browser). On the web, *Install*
-downloads the file for you to place yourself — a standalone doc downloads as
-`.keylayout`, a bundle as `<Name>.bundle.zip` (unzip first, then drop the
-`.bundle` into `~/Library/Keyboard Layouts/`). The desktop app installs in one
-click.
+for byte. Browser limits are filesystem limits: it opens standalone
+`.keylayout` files, but cannot import `.bundle` directory packages directly,
+cannot browse/watch installed system layouts, and cannot write into the system
+Keyboard Layouts folder. On the web, *Install* downloads the file for you to
+place yourself — a standalone doc downloads as `.keylayout`, a bundle as
+`<Name>.bundle.zip` (unzip first, then drop the `.bundle` into
+`~/Library/Keyboard Layouts/`). The desktop app handles `.bundle` packages and
+installs in one click.
 </details>
 
 <details>

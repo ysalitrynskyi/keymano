@@ -11,6 +11,7 @@
 - **Télécharger l’application de bureau** — pour macOS, Windows ou Linux, depuis la [page des versions](https://github.com/ysalitrynskyi/keymano/releases).
 - **macOS:** Unsigned build — after installing from the `.dmg`, see **[First launch on macOS (English)](../../docs/GETTING_STARTED.md#first-launch-on-macos-important)** for the one-time Terminal step if macOS blocks the app.
 - **L’utiliser dans votre navigateur** — ouvrez l’application hébergée à **[keymano.ys.contact](https://keymano.ys.contact)** (hébergée par le mainteneur) ; l’application complète s’exécute dans votre navigateur, sans installation.
+- **Limites de la version web :** dans le navigateur, vous pouvez ouvrir des fichiers `.keylayout` autonomes et les exporter en `.keylayout` ou `.bundle.zip`. Le navigateur ne peut pas importer directement des dossiers `.bundle`, installer dans `~/Library/Keyboard Layouts/`, ni parcourir les dispositions système installées. Pour cela, utilisez l’application de bureau.
 - **Compiler à partir des sources** — pour les contributeurs ; voir le [README en anglais](../../README.md#build-from-source).
 
 ## Fonctionnalités
