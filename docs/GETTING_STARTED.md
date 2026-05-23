@@ -59,8 +59,8 @@ all; the Terminal command above is the reliable fix.
 ## 2. Try it in your browser (no install)
 
 Just want a quick look? Open **<https://keymano.ys.contact>** — the whole app
-runs in your browser. You can open and edit both a `.keylayout` file and a
-`.bundle` keyboard package, and download the result.
+runs in your browser. You can open and edit a `.keylayout` file, save it back
+as `.keylayout`, or export it as a `.bundle` keyboard package.
 
 Browsers can't write into the system Keyboard Layouts folder for you, so the
 **Install** button downloads the file instead — then you drop it in yourself:

@@ -1,7 +1,7 @@
 {
   "name": "keymano",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "description": "Cross-platform editor for macOS .keylayout files and .bundle keyboard packages, with a live clickable keyboard.",
   "license": "Apache-2.0",

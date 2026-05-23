@@ -62,7 +62,8 @@ If you have ever searched for any of the following, this is for you:
 - a **Ukelele alternative** or **Ukelele replacement** that runs on Windows or Linux,
 - how to **create a custom macOS keyboard layout** or **edit a `.keylayout` file**,
 - a **keyboard layout editor** for building **dead keys**, accents, and custom symbols,
-- a way to open, inspect, or repair an existing `.keylayout` / `.bundle` without a Mac.
+- a way to open, inspect, or repair an existing `.keylayout` without a Mac, and
+  export a macOS `.bundle` package from the browser.
 
 ### File-format compatible
 
@@ -161,9 +162,9 @@ Step-by-step help for non-developers:
 The entire UI runs in a browser — ideal for a quick look or a hosted demo. It
 runs the **same Rust core as the desktop app, compiled to WebAssembly**, so
 parsing, serialization, validation, and modifier/dead-key resolution are
-identical. Open imports a real `.keylayout` or `.bundle`; Save/Export downloads
-a real `.keylayout`; exporting a bundle downloads a `<Name>.bundle.zip` (unzip
-once → drop the resulting `.bundle` into `~/Library/Keyboard Layouts/`).
+identical. Open imports a real `.keylayout`; Save/Export downloads a real
+`.keylayout`; exporting a bundle downloads a `<Name>.bundle.zip` (unzip once →
+drop the resulting `.bundle` into `~/Library/Keyboard Layouts/`).
 Browsers can't write into that folder directly, so on the web *Install* hands
 you the file to place yourself; the desktop app does it in one click.
 
@@ -273,8 +274,9 @@ docker compose -f docker-compose.prod.yml up -d
 ## Using Keymano
 
 1. **Start a layout.** From the Welcome screen pick *Standard (US)*, *Basic* (empty
-   Unicode), or open an existing `.keylayout` / `.bundle` (button or drag-and-drop).
-   On macOS you can also fork from an installed layout.
+   Unicode), or open an existing `.keylayout` (button or drag-and-drop). In the
+   desktop app you can also open `.bundle` packages; on macOS you can fork from
+   an installed layout.
 2. **Edit keys.** Click a key, then *Edit* (or double-click) to set its output.
    Toggle Shift / Option / Control / Command / Caps to edit each modifier layer.
    Use *Quick Entry* to type characters directly onto successive keys.

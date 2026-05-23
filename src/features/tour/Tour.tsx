@@ -6,6 +6,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui";
+import { ipc } from "@/lib/ipc";
 import type { TourStep } from "./steps";
 
 const PAD = 8; // spotlight padding around the target
@@ -56,6 +57,17 @@ export function Tour({ steps, onClose }: { steps: TourStep[]; onClose: () => voi
   const last = i >= steps.length - 1;
   const next = React.useCallback(() => (last ? onClose() : setI((n) => n + 1)), [last, onClose]);
   const back = React.useCallback(() => setI((n) => Math.max(0, n - 1)), []);
+  const body =
+    !ipc.isTauri && step.bodyKey === "tour.welcome.intro.body"
+      ? t("tour.welcome.intro.body.web", {
+          defaultValue:
+            "Design and edit macOS keyboard layouts. Start from a template or open a .keylayout file; use the Bundle page to export a .bundle.zip for macOS.",
+        })
+      : !ipc.isTauri && step.bodyKey === "tour.welcome.open.body"
+        ? t("tour.welcome.open.body.web", {
+            defaultValue: "Open a .keylayout from disk, or drag one anywhere onto the window.",
+          })
+        : t(step.bodyKey);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -119,7 +131,7 @@ export function Tour({ steps, onClose }: { steps: TourStep[]; onClose: () => voi
             {i + 1} / {steps.length}
           </span>
         </div>
-        <p className="text-sm leading-relaxed text-[var(--text-muted)]">{t(step.bodyKey)}</p>
+        <p className="text-sm leading-relaxed text-[var(--text-muted)]">{body}</p>
         <div className="mt-4 flex items-center justify-between">
           <button
             onClick={onClose}

@@ -315,7 +315,13 @@ export function App() {
         >
           <div className="rounded-2xl border-2 border-dashed border-[var(--accent)] px-10 py-8 text-center">
             <p className="font-display text-xl font-semibold">{t("welcome.dropTitle")}</p>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">{t("welcome.dropHint")}</p>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              {ipc.isTauri
+                ? t("welcome.dropHint")
+                : t("welcome.dropHint.web", {
+                    defaultValue: "Drop a .keylayout here to open.",
+                  })}
+            </p>
           </div>
         </div>
       )}

@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.3] — 2026-05-22
+
+### Fixed
+- **Browser docs and in-app help now describe the real browser import boundary.**
+  The web app opens standalone `.keylayout` files, then can export the result as
+  a `.keylayout` or `.bundle.zip`; it does not import `.bundle` directory
+  packages from the browser. README, Getting Started, the web drag/drop overlay,
+  and the web welcome tour now say that clearly. Desktop behavior is unchanged:
+  desktop builds can work with `.bundle` packages directly.
+
+### Verified
+- Built the production nginx image from `docker/web-prod.Dockerfile`, ran it
+  locally, opened the real `examples/Ukrainian (Phonetic).keylayout` fixture in
+  Chrome, exported `Ukrainian (Phonetic).bundle.zip`, and inspected the archive:
+  it contained `Contents/Info.plist`, the `.keylayout`, and
+  `en.lproj/InfoPlist.strings`, with the `app.keymano.layouts.*` namespace and
+  no browser console errors.
+
 ## [0.2.2] — 2026-05-22
 
 ### Fixed
@@ -238,6 +256,7 @@ runs on macOS, Windows, Linux, and in the browser.
 - Repo hygiene: `.editorconfig`, `.gitattributes`, `.nvmrc`, `engines`, a
   `NOTICE` file, and ESM-correct `vite.config.ts`.
 
+[0.2.3]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.3
 [0.2.2]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.2
 [0.2.1]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.1
 [0.2.0]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.0
