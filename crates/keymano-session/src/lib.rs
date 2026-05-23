@@ -10,7 +10,9 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use keylayout_core::bundle::{read_bundle, write_bundle, KeyboardBundle};
+use keylayout_core::bundle::{
+    bundle_to_files, read_bundle, write_bundle, BundleFile, KeyboardBundle,
+};
 use keylayout_core::modifiers::ModMask;
 use keylayout_core::{
     build_snapshot, new_keyboard, parse_keylayout, repair, serialize_keylayout, validate, Action,
@@ -694,6 +696,21 @@ impl AppState {
         entry.saved_doc = Some(entry.document.clone());
         entry.dirty = false;
         Ok(())
+    }
+
+    /// Compose the doc's bundle as a list of `(relative path, bytes)` plus the
+    /// bundle's display name. Pure — no I/O. Desktop writes the layout to disk
+    /// via [`save_bundle_to`]; the browser build pipes this through
+    /// `keymano-wasm` to download a `.bundle.zip`. A Standalone doc is wrapped
+    /// into a one-layout bundle (same path the desktop save takes).
+    pub fn bundle_files(&self, id: u32) -> Result<(String, Vec<BundleFile>)> {
+        let entry = self.entry(id)?;
+        let bundle = match &entry.document {
+            Document::Bundle(b) => b.clone(),
+            Document::Standalone(kb) => KeyboardBundle::from_keyboard(kb.clone()),
+        };
+        let files = bundle_to_files(&bundle, &self.encode_opts)?;
+        Ok((bundle.name.clone(), files))
     }
 
     pub fn mark_saved(&mut self, id: u32, path: PathBuf) -> Result<()> {

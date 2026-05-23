@@ -171,4 +171,22 @@ describe("WasmBackend (real core)", () => {
     await m.makeKeyDead(doc.id, 0, 0, 0, 2, "acute", "´");
     await expect(m.setKeyOutput(doc.id, 0, 0, 0, "acute", 5, "x")).rejects.toBeTruthy();
   });
+
+  it("exportBundleZip + bundleZipFilename produce a real zip (v0.2.2 browser path)", async () => {
+    // The v0.2.1 web build silently downloaded a `.keylayout` when the user
+    // asked to export a `.bundle`. v0.2.2 ships these two methods to do it
+    // right — guard the wiring end-to-end through the real wasm so a TS-side
+    // refactor can't quietly break the download.
+    const m = backend();
+    const doc = await m.newDocument("standard", "MyLayout");
+    const bytes = await m.exportBundleZip(doc.id);
+    expect(bytes).toBeInstanceOf(Uint8Array);
+    expect(bytes.length).toBeGreaterThan(0);
+    // Every zip starts with PK\x03\x04 (local file header signature).
+    expect([bytes[0], bytes[1], bytes[2], bytes[3]]).toEqual([0x50, 0x4b, 0x03, 0x04]);
+
+    const filename = await m.bundleZipFilename(doc.id);
+    expect(filename).toMatch(/\.bundle\.zip$/);
+    expect(filename).toContain("MyLayout");
+  });
 });

@@ -10,11 +10,14 @@
 //! the hand-written TS types); scalars are returned directly. Errors surface as
 //! a `JsValue` string so the TS layer can treat them like any thrown `Error`.
 
+use std::io::{Cursor, Write};
 use std::path::PathBuf;
 
+use keylayout_core::bundle::sanitize_stem;
 use keylayout_core::Template;
 use keymano_session::AppState;
 use wasm_bindgen::prelude::*;
+use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 
 fn js_err<E: std::fmt::Display>(e: E) -> JsValue {
     JsValue::from_str(&e.to_string())
@@ -283,5 +286,164 @@ impl Session {
 
     pub fn redo(&mut self, id: u32) -> Result<(), JsValue> {
         self.0.redo(id).map_err(js_err)
+    }
+
+    // ---- bundle export ----
+
+    /// Pack the doc's `.bundle` as a single zip archive the browser can
+    /// download. The zip has a `<Name>.bundle/` top-level directory so the
+    /// unpacked result is a real macOS keyboard bundle (drop into
+    /// `~/Library/Keyboard Layouts/`). Standalone docs are wrapped into a
+    /// one-layout bundle, matching what the desktop's *Export as Bundle* does.
+    pub fn export_bundle_zip(&self, id: u32) -> Result<Vec<u8>, JsValue> {
+        let (name, files) = self.0.bundle_files(id).map_err(js_err)?;
+        let stem = sanitize_stem(&name);
+        let prefix = format!("{}.bundle", stem);
+        let mut buf = Cursor::new(Vec::<u8>::new());
+        let mut zip = ZipWriter::new(&mut buf);
+        // Store-only — these are small text/plist files; skipping deflate keeps
+        // the wasm payload small and the per-file CPU cost zero.
+        let opts: SimpleFileOptions = SimpleFileOptions::default()
+            .compression_method(CompressionMethod::Stored)
+            .unix_permissions(0o644);
+        for (rel, bytes) in files {
+            zip.start_file(format!("{}/{}", prefix, rel), opts)
+                .map_err(js_err)?;
+            zip.write_all(&bytes).map_err(js_err)?;
+        }
+        zip.finish().map_err(js_err)?;
+        Ok(buf.into_inner())
+    }
+
+    /// Suggested filename for the downloaded bundle archive (`<Name>.bundle.zip`).
+    /// Lives next to `export_bundle_zip` so the UI doesn't have to re-derive
+    /// the slug rules.
+    pub fn bundle_zip_filename(&self, id: u32) -> Result<String, JsValue> {
+        let (name, _) = self.0.bundle_files(id).map_err(js_err)?;
+        Ok(format!("{}.bundle.zip", sanitize_stem(&name)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Read;
+
+    fn new_doc_id(s: &mut Session, name: &str) -> u32 {
+        let summary_json = s.new_document("standard", name).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&summary_json).unwrap();
+        v["id"].as_u64().unwrap() as u32
+    }
+
+    /// The wasm bundle export must produce a real zip with the expected
+    /// `<Name>.bundle/Contents/...` layout — this is what the browser
+    /// downloads and what the user double-clicks to unzip back into a usable
+    /// macOS keyboard bundle. The v0.2.1 download bug was that the web build
+    /// silently shipped a `.keylayout` instead.
+    #[test]
+    fn export_bundle_zip_round_trips_through_a_real_zip_archive() {
+        let mut s = Session::new();
+        let id = new_doc_id(&mut s, "MyLayout");
+
+        let bytes = s.export_bundle_zip(id).unwrap();
+        assert!(!bytes.is_empty(), "zip bytes empty");
+
+        let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
+        let names: Vec<String> = (0..archive.len())
+            .map(|i| archive.by_index(i).unwrap().name().to_string())
+            .collect();
+
+        // Top-level dir = `<Name>.bundle/` so unzipping gives a usable bundle.
+        for n in &names {
+            assert!(
+                n.starts_with("MyLayout.bundle/"),
+                "missing top-level prefix: {n}"
+            );
+        }
+        assert!(
+            names
+                .iter()
+                .any(|n| n == "MyLayout.bundle/Contents/Info.plist"),
+            "Info.plist missing: {names:?}"
+        );
+        assert!(
+            names.iter().any(|n| n.ends_with(".keylayout")),
+            ".keylayout missing: {names:?}"
+        );
+
+        // Info.plist must use *our* namespace, not Apple's reserved com.apple.*
+        // (review P1-12) — and must include the bundle name.
+        let mut info_bytes = Vec::new();
+        archive
+            .by_name("MyLayout.bundle/Contents/Info.plist")
+            .unwrap()
+            .read_to_end(&mut info_bytes)
+            .unwrap();
+        let info = String::from_utf8(info_bytes).unwrap();
+        assert!(
+            info.contains("app.keymano.layouts."),
+            "wrong identifier namespace: {info}"
+        );
+        assert!(
+            !info.contains("com.apple."),
+            "leaked Apple namespace: {info}"
+        );
+    }
+
+    #[test]
+    fn bundle_zip_filename_uses_the_bundle_name() {
+        let mut s = Session::new();
+        let id = new_doc_id(&mut s, "MyLayout");
+        let name = s.bundle_zip_filename(id).unwrap();
+        assert!(name.ends_with(".bundle.zip"), "{name}");
+        assert!(name.contains("MyLayout"), "{name}");
+    }
+
+    /// Two consecutive exports of the same doc must produce byte-identical
+    /// archives. Proves no real-time leaks from the zip writer (we pin the
+    /// time feature off so timestamps stay at the zip epoch). A regression
+    /// here would break caching, content-hash deployment, and reproducible
+    /// builds.
+    #[test]
+    fn export_bundle_zip_is_deterministic() {
+        let mut s = Session::new();
+        let id = new_doc_id(&mut s, "MyLayout");
+        let a = s.export_bundle_zip(id).unwrap();
+        let b = s.export_bundle_zip(id).unwrap();
+        assert_eq!(
+            a,
+            b,
+            "non-deterministic zip output ({} vs {} bytes)",
+            a.len(),
+            b.len()
+        );
+    }
+
+    /// Unicode bundle names must survive into the archive — the v0.2.2 UI port
+    /// of `sanitize_stem` had a bug where the strict ASCII identifier slug was
+    /// used for filenames too, collapsing Cyrillic / Japanese names to dashes.
+    /// The wasm side must keep the real letters in `<Name>.bundle/` and in the
+    /// .keylayout filename.
+    #[test]
+    fn export_bundle_zip_keeps_unicode_letters_in_filenames() {
+        let mut s = Session::new();
+        let id = new_doc_id(&mut s, "Українська");
+
+        let bytes = s.export_bundle_zip(id).unwrap();
+        let archive = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
+        let names: Vec<String> = (0..archive.len())
+            .map(|i| archive.file_names().nth(i).unwrap().to_string())
+            .collect();
+
+        assert!(
+            names.iter().all(|n| n.starts_with("Українська.bundle/")),
+            "top-level dir lost Cyrillic letters: {names:?}"
+        );
+        assert!(
+            names
+                .iter()
+                .any(|n| n == "Українська.bundle/Contents/Resources/Українська.keylayout"),
+            ".keylayout stem lost Cyrillic letters: {names:?}"
+        );
     }
 }

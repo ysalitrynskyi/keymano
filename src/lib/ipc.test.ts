@@ -58,4 +58,65 @@ describe("ipc web backend", () => {
     expect(revokeObjectURL).toHaveBeenCalledOnce();
     click.mockRestore();
   });
+
+  it("exportBundleDialog downloads a .bundle.zip in the browser (v0.2.2)", async () => {
+    // v0.2.1 silently downloaded a .keylayout here (wrong artifact). Guard the
+    // fix: a real Blob download with the .bundle.zip filename ends up on the
+    // anchor element + the URL is revoked after click.
+    const doc = await ipc.newDocument("standard", "MyLayout");
+    const createObjectURL = vi.fn(() => "blob:fake");
+    const revokeObjectURL = vi.fn();
+    (URL as unknown as { createObjectURL: unknown }).createObjectURL = createObjectURL;
+    (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = revokeObjectURL;
+    let downloadAttr = "";
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        downloadAttr = this.download;
+      });
+    const ok = await ipc.exportBundleDialog(doc.id, 0, "MyLayout");
+    expect(ok).toBe(true);
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    expect(click).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).toHaveBeenCalledOnce();
+    expect(downloadAttr).toMatch(/\.bundle\.zip$/);
+    expect(downloadAttr).toContain("MyLayout");
+    click.mockRestore();
+  });
+
+  it("installLayout (web) routes a standalone doc to the .keylayout path", async () => {
+    const doc = await ipc.newDocument("standard", "Standalone");
+    const saveSpy = vi.spyOn(ipc, "saveFileDialog").mockResolvedValue(true);
+    const exportSpy = vi.spyOn(ipc, "exportBundleDialog").mockResolvedValue(true);
+    const result = await ipc.installLayout(doc.id, 0);
+    expect(result).toEqual({ kind: "downloaded" });
+    expect(saveSpy).toHaveBeenCalledOnce();
+    expect(exportSpy).not.toHaveBeenCalled();
+    saveSpy.mockRestore();
+    exportSpy.mockRestore();
+  });
+
+  it("installLayout (web) routes a bundle doc to the .bundle.zip path (v0.2.2)", async () => {
+    // The web wasm doesn't yet expose a "load bundle" entry point, so stub
+    // listDocuments to flip is_bundle for this doc — isolates the routing
+    // decision in installLayout from how the doc was created.
+    const doc = await ipc.newDocument("standard", "Bundled");
+    const saveSpy = vi.spyOn(ipc, "saveFileDialog").mockResolvedValue(true);
+    const exportSpy = vi.spyOn(ipc, "exportBundleDialog").mockResolvedValue(true);
+    vi.spyOn(ipc, "listDocuments").mockResolvedValue([
+      {
+        id: doc.id,
+        name: "Bundled",
+        path: null,
+        is_bundle: true,
+        keyboard_names: ["Bundled"],
+        dirty: false,
+      },
+    ]);
+    const result = await ipc.installLayout(doc.id, 0);
+    expect(result).toEqual({ kind: "downloaded" });
+    expect(exportSpy).toHaveBeenCalledOnce();
+    expect(saveSpy).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
 });

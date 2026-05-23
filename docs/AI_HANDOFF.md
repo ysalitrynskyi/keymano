@@ -15,13 +15,13 @@ For day-to-day commands see [DEVELOP.md](DEVELOP.md). For end users see [GETTING
 
 ---
 
-## Release / git state (as of v0.2.1)
+## Release / git state (as of v0.2.2)
 
 | Item | Value |
 |------|--------|
-| Version | `0.2.1` (`package.json`, workspace `Cargo.toml`) |
+| Version | `0.2.2` (`package.json`, workspace `Cargo.toml`) |
 | `main` HEAD | latest `v*` release commit; doc / maintenance commits may follow on top |
-| Latest release commit | `fix: allow WebAssembly in the web CSP so the browser core loads (v0.2.1)` |
+| Latest release commit | `fix: produce a real .bundle download in the browser, polish Bundle UX (v0.2.2)` |
 | Tag → release | Push an annotated `vX.Y.Z` tag on a `main` commit; CI builds desktop bundles + multi-arch web image and creates the GitHub Release |
 | Container image | `ghcr.io/ysalitrynskyi/keymano:<version>` (also `:<major>.<minor>`, `:latest` per CI rules; prerelease tags don't move `:latest`) |
 | CI on push/tag | `ci.yml` + `codeql.yml`; matrix macOS / Windows / Linux |
@@ -99,9 +99,11 @@ cargo test --workspace
 pnpm build
 ```
 
-Expect ~131 Rust tests (workspace) and ~139 vitest tests (the web suite drives
-the real core through wasm, plus a deploy-CSP guard that renders the real nginx
-entrypoint to a temp dir). CI also runs coverage gates (core ≥90%, frontend ≥80%).
+Expect ~136 Rust tests (workspace) and ~150 vitest tests (the web suite drives
+the real core through wasm — incl. bundle-zip export — plus a deploy-CSP guard
+that renders the real nginx entrypoint to a temp dir, plus a sanitize-stem
+TS↔Rust parity test, plus ipc-routing tests for the v0.2.2 install paths). CI
+also runs coverage gates (core ≥90%, frontend ≥80%).
 
 ---
 

@@ -381,31 +381,51 @@ pub fn read_bundle(dir: &Path) -> Result<KeyboardBundle> {
     })
 }
 
-/// Write a [`KeyboardBundle`] to a `.bundle` directory.
-pub fn write_bundle(bundle: &KeyboardBundle, dir: &Path, opts: &EncodeOpts) -> Result<()> {
-    let contents = dir.join("Contents");
-    let resources = contents.join("Resources");
-    std::fs::create_dir_all(&resources)?;
+/// One file inside a bundle: a forward-slash relative path + raw bytes.
+/// Forward slashes keep the same value usable on both disk and zip archives.
+pub type BundleFile = (String, Vec<u8>);
 
-    std::fs::write(contents.join("Info.plist"), build_info_plist(bundle)?)?;
-
+/// Compose a bundle's directory layout into pairs of (relative path, bytes).
+///
+/// Paths use forward slashes (portable across OS + ready for zip archives).
+/// No I/O: the caller decides whether to write them to disk (`write_bundle`,
+/// desktop) or pack them into a zip the browser can download (`keymano-wasm`).
+pub fn bundle_to_files(bundle: &KeyboardBundle, opts: &EncodeOpts) -> Result<Vec<BundleFile>> {
+    let mut out: Vec<(String, Vec<u8>)> = Vec::new();
+    out.push(("Contents/Info.plist".to_string(), build_info_plist(bundle)?));
     for layout in &bundle.layouts {
-        let xml = serialize_keylayout(&layout.keyboard, opts);
-        std::fs::write(
-            resources.join(format!("{}.keylayout", layout.file_stem)),
-            xml,
-        )?;
+        out.push((
+            format!("Contents/Resources/{}.keylayout", layout.file_stem),
+            serialize_keylayout(&layout.keyboard, opts).into_bytes(),
+        ));
         if let Some(icon) = &layout.icon {
-            std::fs::write(resources.join(format!("{}.icns", layout.file_stem)), icon)?;
+            out.push((
+                format!("Contents/Resources/{}.icns", layout.file_stem),
+                icon.clone(),
+            ));
         }
     }
-
     for loc in &bundle.localizations {
-        let lproj = resources.join(format!("{}.lproj", loc.locale));
-        std::fs::create_dir_all(&lproj)?;
-        std::fs::write(lproj.join("InfoPlist.strings"), build_strings(&loc.names))?;
+        out.push((
+            format!("Contents/Resources/{}.lproj/InfoPlist.strings", loc.locale),
+            build_strings(&loc.names).into_bytes(),
+        ));
     }
+    Ok(out)
+}
 
+/// Write a [`KeyboardBundle`] to a `.bundle` directory on disk.
+pub fn write_bundle(bundle: &KeyboardBundle, dir: &Path, opts: &EncodeOpts) -> Result<()> {
+    for (rel, bytes) in bundle_to_files(bundle, opts)? {
+        let mut path = dir.to_path_buf();
+        for part in rel.split('/') {
+            path.push(part);
+        }
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&path, bytes)?;
+    }
     Ok(())
 }
 
@@ -620,5 +640,27 @@ mod tests {
             Some("Первый")
         );
         std::fs::remove_dir_all(&tmp).unwrap();
+    }
+
+    #[test]
+    fn bundle_to_files_lists_required_paths() {
+        let kb = new_keyboard(Template::Basic, "MyLayout");
+        let bundle = KeyboardBundle::from_keyboard(kb);
+        let files = bundle_to_files(&bundle, &EncodeOpts::default()).unwrap();
+        let paths: Vec<&str> = files.iter().map(|(p, _)| p.as_str()).collect();
+        assert!(
+            paths.contains(&"Contents/Info.plist"),
+            "Info.plist missing: {paths:?}"
+        );
+        assert!(
+            paths
+                .iter()
+                .any(|p| p.starts_with("Contents/Resources/") && p.ends_with(".keylayout")),
+            "no .keylayout: {paths:?}"
+        );
+        // Every path uses forward slashes (portable, zip-friendly).
+        for p in &paths {
+            assert!(!p.contains('\\'), "backslash in {p}");
+        }
     }
 }

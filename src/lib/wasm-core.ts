@@ -47,6 +47,8 @@ interface WasmSession {
   repair(id: number, kbIndex: number): string;
   undo(id: number): void;
   redo(id: number): void;
+  export_bundle_zip(id: number): Uint8Array;
+  bundle_zip_filename(id: number): string;
 }
 
 let sessionPromise: Promise<WasmSession> | null = null;
@@ -156,5 +158,11 @@ export class WasmBackend {
   }
   async redo(id: number): Promise<void> {
     (await this.s()).redo(id);
+  }
+  async exportBundleZip(id: number): Promise<Uint8Array> {
+    return (await this.s()).export_bundle_zip(id);
+  }
+  async bundleZipFilename(id: number): Promise<string> {
+    return (await this.s()).bundle_zip_filename(id);
   }
 }

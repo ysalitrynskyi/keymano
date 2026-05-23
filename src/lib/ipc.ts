@@ -399,7 +399,10 @@ export const ipc = {
     return getWeb().getXml(id, kbIndex, codeNonAscii);
   },
 
-  /** Export the document as a .bundle directory (desktop save dialog). */
+  /** Export the document as a `.bundle` (desktop writes the directory; web
+   * downloads a `<Name>.bundle.zip` archive — browsers can't write directory
+   * packages, so the zip is the closest portable artifact: unzip it once and
+   * the result is a real macOS keyboard bundle). */
   async exportBundleDialog(id: number, kbIndex: number, name: string): Promise<boolean> {
     if (isTauri) {
       const { save } = await import("@tauri-apps/plugin-dialog");
@@ -408,9 +411,15 @@ export const ipc = {
       await invoke("save_file", { id, kbIndex, path, format: "bundle" });
       return true;
     }
-    // web: a .bundle is a folder the browser can't write; download the
-    // standalone .keylayout instead so the action still produces a real file.
-    return this.saveFileDialog(id, kbIndex, name);
+    const bytes = await getWeb().exportBundleZip(id);
+    const filename = await getWeb().bundleZipFilename(id);
+    const blob = new Blob([new Uint8Array(bytes)], { type: "application/zip" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    return true;
   },
 
   /** Install the active layout into ~/Library/Keyboard Layouts (macOS). */
@@ -419,10 +428,17 @@ export const ipc = {
       const path = await invoke<string>("install_layout", { id, kbIndex });
       return { kind: "installed", path };
     }
-    // web: can't write to ~/Library/Keyboard Layouts from a browser — download
-    // the .keylayout so the user can place it themselves.
-    const name = (await this.listDocuments()).find((d) => d.id === id)?.name ?? "Keyboard";
-    await this.saveFileDialog(id, kbIndex, name);
+    // web: can't write into the system Keyboard Layouts folder from a browser.
+    // Hand the user the right artifact for what they have open: a bundle doc
+    // downloads as `.bundle.zip` (unzip + drop into ~/Library/Keyboard Layouts),
+    // a standalone keylayout downloads as `.keylayout`.
+    const doc = (await this.listDocuments()).find((d) => d.id === id);
+    const name = doc?.name ?? "Keyboard";
+    if (doc?.is_bundle) {
+      await this.exportBundleDialog(id, kbIndex, name);
+    } else {
+      await this.saveFileDialog(id, kbIndex, name);
+    }
     return { kind: "downloaded" };
   },
 

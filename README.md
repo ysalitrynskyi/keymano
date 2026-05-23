@@ -41,10 +41,11 @@ no Xcode, no Apple Developer account, no Carbon APIs. Reads and writes the same
 | **Build from source** | Contributors, packagers | `pnpm install && pnpm tauri dev` — see [Build from source](#build-from-source). |
 
 > The desktop app is a small native binary (Tauri + Rust). The browser version is
-> the exact same UI. In the browser, Open imports a real `.keylayout` you pick,
-> and Save/Export download a real `.keylayout` file; only installing into the
-> system Keyboard Layouts folder is desktop-only (the browser downloads the file
-> for you to place manually).
+> the exact same UI. In the browser, Open imports a real `.keylayout` or
+> `.bundle` you pick, Save/Export download a real `.keylayout`, and exporting a
+> bundle downloads a `.bundle.zip` (unzip → drop into `~/Library/Keyboard
+> Layouts/`). Only installing directly into the system Keyboard Layouts folder
+> is desktop-only.
 
 ---
 
@@ -160,10 +161,11 @@ Step-by-step help for non-developers:
 The entire UI runs in a browser — ideal for a quick look or a hosted demo. It
 runs the **same Rust core as the desktop app, compiled to WebAssembly**, so
 parsing, serialization, validation, and modifier/dead-key resolution are
-identical: Open imports a real `.keylayout`, Save/Export download a real file.
-The only desktop-only step is installing into the system Keyboard Layouts
-folder (browsers can't write there), so in the browser Install downloads the
-file for you to place manually.
+identical. Open imports a real `.keylayout` or `.bundle`; Save/Export downloads
+a real `.keylayout`; exporting a bundle downloads a `<Name>.bundle.zip` (unzip
+once → drop the resulting `.bundle` into `~/Library/Keyboard Layouts/`).
+Browsers can't write into that folder directly, so on the web *Install* hands
+you the file to place yourself; the desktop app does it in one click.
 
 ```bash
 pnpm install
@@ -330,8 +332,11 @@ macOS only re-scans `~/Library/Keyboard Layouts` on login.
 Same UI **and the same Rust core** — the browser runs `keylayout-core` compiled
 to WebAssembly, so parsing/serialization/validation match the desktop app byte
 for byte. The only difference is the browser can't write into the system
-Keyboard Layouts folder (no app can from a browser), so Install downloads the
-file for you to place manually; on the desktop it installs directly.
+Keyboard Layouts folder (no app can from a browser). On the web, *Install*
+downloads the file for you to place yourself — a standalone doc downloads as
+`.keylayout`, a bundle as `<Name>.bundle.zip` (unzip first, then drop the
+`.bundle` into `~/Library/Keyboard Layouts/`). The desktop app installs in one
+click.
 </details>
 
 <details>

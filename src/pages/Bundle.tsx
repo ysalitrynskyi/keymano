@@ -1,9 +1,15 @@
-// P6 Bundle manager (. Metadata + layouts overview.
+// Bundle manager: metadata, file-tree preview, platform-aware export + install
+// instructions. A `.bundle` is a macOS keyboard package (a directory with one
+// or more layouts, an `Info.plist`, and translated display names). Browsers
+// can't write directories, so the web build downloads it as a zip the user
+// unzips back into a real `.bundle` (handled in `ipc.exportBundleDialog`).
 
 import { useTranslation } from "react-i18next";
 import { Package, Wand2 } from "lucide-react";
 
 import { Badge, Button, Card, Input } from "@/components/ui";
+import { ipc } from "@/lib/ipc";
+import { sanitizeStem } from "@/lib/sanitize-stem";
 import { useEditor } from "@/store/editor";
 
 export function BundlePage() {
@@ -15,23 +21,32 @@ export function BundlePage() {
   const generateName = useEditor((s) => s.generateName);
   const doc = docs.find((d) => d.id === activeDocId);
   if (!doc) return null;
+  const web = !ipc.isTauri;
 
-  // Mirror keylayout-core's bundle::from_keyboard slug: keep [A-Za-z0-9-],
-  // map everything else to '-', trim, fall back to "layout". Must match the
-  // identifier actually written to the .bundle so the UI doesn't mislead.
-  const slug = doc.name.replace(/[^A-Za-z0-9-]/g, "-").replace(/^-+|-+$/g, "") || "layout";
-  const identifier = `app.keymano.layouts.${slug}`;
+  // Two different slugs, both matching keylayout-core::bundle:
+  //   - identifier: CFBundleIdentifier must be ASCII reverse-DNS (strict).
+  //   - file stem: permissive, keeps Unicode letters so a Cyrillic / Japanese
+  //     name survives into the actual on-disk filename (sanitize_stem).
+  // The "what's inside" tree below uses the latter; using the strict
+  // identifier slug there would lie about the archive contents.
+  const idSlug = doc.name.replace(/[^A-Za-z0-9-]/g, "-").replace(/^-+|-+$/g, "") || "layout";
+  const identifier = `app.keymano.layouts.${idSlug}`;
+  const bundleStem = sanitizeStem(doc.name);
 
   return (
     <div className="mx-auto max-w-2xl space-y-4" data-tour="tour-page">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-xl font-semibold">{t("bundle.title")}</h2>
         <Button size="sm" variant="accent" onClick={() => void exportBundle()}>
           <Package size={14} />
-          {t("bundle.export")}
+          {web ? t("bundle.export.web") : t("bundle.export.desktop")}
         </Button>
       </div>
       <p className="text-sm text-[var(--text-muted)]">{t("bundle.intro")}</p>
+      {!doc.is_bundle && (
+        <p className="text-xs text-[var(--text-muted)]">{t("bundle.standaloneNote")}</p>
+      )}
+
       <Card className="space-y-2 p-4 text-sm">
         <div className="flex items-center justify-between gap-2">
           <span className="shrink-0 text-[var(--text-muted)]">{t("bundle.name")}</span>
@@ -87,6 +102,36 @@ export function BundlePage() {
           ))}
         </ul>
       </div>
+
+      <Card className="space-y-1.5 p-4 text-sm">
+        <h3 className="font-semibold">{t("bundle.contents")}</h3>
+        <p className="text-xs text-[var(--text-muted)]">{t("bundle.contentsHelp")}</p>
+        <ul className="space-y-1 font-mono text-xs" dir="ltr">
+          <li>{bundleStem}.bundle/Contents/Info.plist</li>
+          {doc.keyboard_names.map((name, i) => (
+            <li key={i}>
+              {bundleStem}.bundle/Contents/Resources/{sanitizeStem(name)}.keylayout
+            </li>
+          ))}
+          <li>{bundleStem}.bundle/Contents/Resources/en.lproj/InfoPlist.strings</li>
+        </ul>
+      </Card>
+
+      <Card className="space-y-2 p-4 text-sm">
+        <h3 className="font-semibold">{t("bundle.install.title")}</h3>
+        {web ? (
+          <ol className="ml-5 list-decimal space-y-1 text-[var(--text-muted)]">
+            <li>{t("bundle.install.web1")}</li>
+            <li>{t("bundle.install.web2")}</li>
+            <li>{t("bundle.install.web3")}</li>
+          </ol>
+        ) : (
+          <ol className="ml-5 list-decimal space-y-1 text-[var(--text-muted)]">
+            <li>{t("bundle.install.desktop1")}</li>
+            <li>{t("bundle.install.desktop2")}</li>
+          </ol>
+        )}
+      </Card>
     </div>
   );
 }

@@ -4,6 +4,45 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.2] — 2026-05-22
+
+### Fixed
+- **Bundle export in the browser actually produces a bundle now.** v0.2.1 (and
+  every prior web build) silently downloaded a standalone `.keylayout` when the
+  user asked to export a `.bundle` — browsers can't write directory packages,
+  and the fallback was wrong. The browser build now downloads a real
+  `<Name>.bundle.zip`: unzip once and the result is a usable macOS keyboard
+  bundle (`Contents/Info.plist`, `Contents/Resources/<stem>.keylayout`, locale
+  `InfoPlist.strings`). The desktop app continues to write a `.bundle`
+  directory directly. Implemented by a shared `bundle_to_files` helper in
+  `keylayout-core` (one source of truth for the bundle layout, exercised on
+  both platforms) plus a `Session.export_bundle_zip` wasm method that store-
+  zips the files with a `<Name>.bundle/` top-level entry.
+- **Install on a bundle doc (browser)** now downloads the `.bundle.zip` too,
+  not a `.keylayout`.
+
+### Changed
+- **Bundle page UX** is no longer a bare metadata pane. It now explains what a
+  `.bundle` actually is, lists the exact files that will be written, and gives
+  step-by-step install instructions tailored to the current platform (web vs
+  desktop). The Export button label is platform-aware: "Download .bundle.zip"
+  in the browser, "Export bundle…" on the desktop. Standalone docs get a small
+  note that exporting wraps them into a one-layout bundle automatically.
+- **i18n:** 24 locales updated — `bundle.intro` rewritten to the clearer copy,
+  obsolete `bundle.export` removed, 11 new keys added for the platform-aware
+  export label, the new "what's inside" tree, and the per-platform install
+  steps (`bundle.export.web` / `bundle.export.desktop`, `bundle.contents`,
+  `bundle.install.web1`–`web3`, `bundle.install.desktop1`–`desktop2`,
+  `bundle.standaloneNote`, `bundle.contentsHelp`).
+
+### Tests
+- `keymano-wasm`: zip round-trip — call `export_bundle_zip`, parse the bytes
+  back through `zip::ZipArchive`, assert the `<Name>.bundle/` prefix, the
+  expected paths, and that `Info.plist` uses the `app.keymano.layouts.*`
+  namespace (never `com.apple.*`).
+- `keylayout-core::bundle::bundle_to_files`: returns all required paths with
+  forward slashes (portable across OS + zip).
+
 ## [0.2.1] — 2026-05-22
 
 ### Fixed
@@ -199,6 +238,7 @@ runs on macOS, Windows, Linux, and in the browser.
 - Repo hygiene: `.editorconfig`, `.gitattributes`, `.nvmrc`, `engines`, a
   `NOTICE` file, and ESM-correct `vite.config.ts`.
 
+[0.2.2]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.2
 [0.2.1]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.1
 [0.2.0]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ysalitrynskyi/keymano/releases/tag/v0.1.0

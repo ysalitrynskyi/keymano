@@ -59,9 +59,21 @@ all; the Terminal command above is the reliable fix.
 ## 2. Try it in your browser (no install)
 
 Just want a quick look? Open **<https://keymano.ys.contact>** — the whole app
-runs in your browser. You can open a `.keylayout` file, edit it, and download the
-result. (Installing a layout into the system still needs the desktop app; the
-browser just downloads the file for you to place yourself.)
+runs in your browser. You can open and edit both a `.keylayout` file and a
+`.bundle` keyboard package, and download the result.
+
+Browsers can't write into the system Keyboard Layouts folder for you, so the
+**Install** button downloads the file instead — then you drop it in yourself:
+
+- A standalone `.keylayout` downloads as a single file.
+- A `.bundle` (a folder package) downloads as a `.bundle.zip` archive. **Unzip
+  it first** — the result is a real `.bundle` folder.
+
+On macOS, move the result into `~/Library/Keyboard Layouts/` (in Finder press
+`⌘⇧G` to jump there), then open **System Settings → Keyboard → Input Sources**,
+click **+**, and pick your layout. If it doesn't show up, log out and back in —
+macOS only re-scans that folder at login. (The desktop app does all of this for
+you with one click.)
 
 ---
 
