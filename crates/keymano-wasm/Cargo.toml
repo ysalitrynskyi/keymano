@@ -21,7 +21,7 @@ console_error_panic_hook = "0.1"
 # Store-only zip (no deflate/time deps) — keeps the wasm payload small. We
 # use this to pack a `.bundle` directory into a single archive the browser can
 # download, since browsers can't write directories.
-zip = { version = "2", default-features = false }
+zip = { version = "8", default-features = false }
 
 # The wasm-opt bundled with this wasm-pack rejects the bulk-memory ops LLVM
 # emits (memory.fill); skip it. Vite/brotli still compress the artifact well.
