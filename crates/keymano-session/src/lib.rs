@@ -11,13 +11,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use keylayout_core::bundle::{
-    bundle_to_files, read_bundle, write_bundle, BundleFile, KeyboardBundle,
+    bundle_from_files, bundle_to_files, read_bundle, write_bundle, BundleFile, KeyboardBundle,
 };
 use keylayout_core::modifiers::ModMask;
 use keylayout_core::{
-    build_snapshot, new_keyboard, parse_keylayout, repair, serialize_keylayout, validate, Action,
-    CoreError, Document, EncodeOpts, Issue, Key, KeyValue, Keyboard, KeyboardSnapshot, Result,
-    Template, When,
+    apply_repair_plan, build_snapshot, build_snapshot_with_options, dead_key_graph, layer_matrix,
+    new_keyboard, parse_keylayout, plan_repairs, repair, serialize_keylayout, validate,
+    validation_report, Action, Comments, CoreError, DeadKeyGraph, Document, EncodeOpts, Issue, Key,
+    KeyValue, Keyboard, KeyboardSnapshot, LayerMatrix, RepairPlan, Result, SnapshotOptions,
+    Template, ValidationReport, When,
 };
 use serde::{Deserialize, Serialize};
 
@@ -54,6 +56,45 @@ pub struct DocSummary {
 pub enum SaveFormat {
     Keylayout,
     Bundle,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BundleMetadataView {
+    pub identifier: String,
+    pub name: String,
+    pub version: String,
+    pub build_version: Option<String>,
+    pub project_name: Option<String>,
+    pub source_version: Option<String>,
+    pub layout_count: usize,
+    pub localizations: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BundleMetadataPatch {
+    pub identifier: Option<String>,
+    pub name: Option<String>,
+    pub version: Option<String>,
+    pub build_version: Option<Option<String>>,
+    pub project_name: Option<Option<String>>,
+    pub source_version: Option<Option<String>>,
+}
+
+fn bundle_metadata_view(bundle: &KeyboardBundle) -> BundleMetadataView {
+    BundleMetadataView {
+        identifier: bundle.identifier.clone(),
+        name: bundle.name.clone(),
+        version: bundle.version.clone(),
+        build_version: bundle.build_version.clone(),
+        project_name: bundle.project_name.clone(),
+        source_version: bundle.source_version.clone(),
+        layout_count: bundle.layouts.len(),
+        localizations: bundle
+            .localizations
+            .iter()
+            .map(|loc| loc.locale.clone())
+            .collect(),
+    }
 }
 
 struct DocEntry {
@@ -203,6 +244,15 @@ impl AppState {
         Ok(self.insert(Document::Bundle(bundle), Some(dir)))
     }
 
+    pub fn open_bundle_files(
+        &mut self,
+        files: Vec<BundleFile>,
+        path: Option<PathBuf>,
+    ) -> Result<DocSummary> {
+        let bundle = bundle_from_files(files)?;
+        Ok(self.insert(Document::Bundle(bundle), path))
+    }
+
     pub fn close_document(&mut self, id: u32) {
         self.docs.remove(&id);
     }
@@ -261,6 +311,25 @@ impl AppState {
         Ok(build_snapshot(kb, type_code, ModMask(mask), dead_state))
     }
 
+    pub fn get_snapshot_with_options(
+        &self,
+        id: u32,
+        kb_index: usize,
+        type_code: u32,
+        mask: u16,
+        dead_state: &str,
+        options: SnapshotOptions,
+    ) -> Result<KeyboardSnapshot> {
+        let kb = self.entry(id)?.keyboard(kb_index)?;
+        Ok(build_snapshot_with_options(
+            kb,
+            type_code,
+            ModMask(mask),
+            dead_state,
+            options,
+        ))
+    }
+
     pub fn get_xml(&self, id: u32, kb_index: usize, code_non_ascii: bool) -> Result<String> {
         let kb = self.entry(id)?.keyboard(kb_index)?;
         Ok(serialize_keylayout(kb, &EncodeOpts { code_non_ascii }))
@@ -269,6 +338,44 @@ impl AppState {
     pub fn validate(&self, id: u32, kb_index: usize) -> Result<Vec<Issue>> {
         let kb = self.entry(id)?.keyboard(kb_index)?;
         Ok(validate(kb))
+    }
+
+    pub fn validation_report(&self, id: u32, kb_index: usize) -> Result<ValidationReport> {
+        let kb = self.entry(id)?.keyboard(kb_index)?;
+        Ok(validation_report(kb))
+    }
+
+    pub fn repair_plan(&self, id: u32, kb_index: usize) -> Result<RepairPlan> {
+        let kb = self.entry(id)?.keyboard(kb_index)?;
+        Ok(plan_repairs(kb))
+    }
+
+    pub fn layer_matrix(
+        &self,
+        id: u32,
+        kb_index: usize,
+        type_code: u32,
+        include_high_codes: bool,
+    ) -> Result<LayerMatrix> {
+        let kb = self.entry(id)?.keyboard(kb_index)?;
+        Ok(layer_matrix(kb, type_code, include_high_codes))
+    }
+
+    pub fn dead_key_graph(&self, id: u32, kb_index: usize) -> Result<DeadKeyGraph> {
+        let kb = self.entry(id)?.keyboard(kb_index)?;
+        Ok(dead_key_graph(kb))
+    }
+
+    pub fn comments(&self, id: u32, kb_index: usize) -> Result<Comments> {
+        Ok(self.entry(id)?.keyboard(kb_index)?.comments.clone())
+    }
+
+    pub fn bundle_metadata(&self, id: u32) -> Result<Option<BundleMetadataView>> {
+        let entry = self.entry(id)?;
+        let Document::Bundle(bundle) = &entry.document else {
+            return Ok(None);
+        };
+        Ok(Some(bundle_metadata_view(bundle)))
     }
 
     pub fn undo_label(&self, id: u32) -> Result<Option<String>> {
@@ -547,6 +654,89 @@ impl AppState {
         Ok(fixed)
     }
 
+    pub fn apply_repair_plan(
+        &mut self,
+        id: u32,
+        kb_index: usize,
+        plan: RepairPlan,
+    ) -> Result<Vec<String>> {
+        let entry = self.entry_mut(id)?;
+        let before = entry.document.clone();
+        let fixed = apply_repair_plan(entry.keyboard_mut(kb_index)?, &plan).fixed;
+        if !fixed.is_empty() {
+            entry.commit_undo(before, "Apply repair plan");
+        }
+        Ok(fixed)
+    }
+
+    pub fn set_key_output_in_map(
+        &mut self,
+        id: u32,
+        kb_index: usize,
+        set_id: &str,
+        map_index: u32,
+        code: u16,
+        output: String,
+    ) -> Result<()> {
+        let entry = self.entry_mut(id)?;
+        let before = entry.document.clone();
+        let kb = entry.keyboard_mut(kb_index)?;
+        let map = Self::ensure_map(kb, set_id, map_index)?;
+        let current = map.key(code).map(|key| key.value.clone());
+        let next = KeyValue::Output(output);
+        if current.as_ref() != Some(&next) {
+            map.set_key(Key { code, value: next });
+            entry.commit_undo(before, "Change map output");
+        }
+        Ok(())
+    }
+
+    pub fn set_comments(&mut self, id: u32, kb_index: usize, comments: Comments) -> Result<()> {
+        let entry = self.entry_mut(id)?;
+        let before = entry.document.clone();
+        let kb = entry.keyboard_mut(kb_index)?;
+        if kb.comments != comments {
+            kb.comments = comments;
+            entry.commit_undo(before, "Set comments");
+        }
+        Ok(())
+    }
+
+    pub fn set_bundle_metadata(
+        &mut self,
+        id: u32,
+        patch: BundleMetadataPatch,
+    ) -> Result<Option<BundleMetadataView>> {
+        let entry = self.entry_mut(id)?;
+        let before = entry.document.clone();
+        let Document::Bundle(bundle) = &mut entry.document else {
+            return Ok(None);
+        };
+        if let Some(identifier) = patch.identifier {
+            bundle.identifier = identifier;
+        }
+        if let Some(name) = patch.name {
+            bundle.name = name;
+        }
+        if let Some(version) = patch.version {
+            bundle.version = version;
+        }
+        if let Some(build_version) = patch.build_version {
+            bundle.build_version = build_version;
+        }
+        if let Some(project_name) = patch.project_name {
+            bundle.project_name = project_name;
+        }
+        if let Some(source_version) = patch.source_version {
+            bundle.source_version = source_version;
+        }
+        let view = bundle_metadata_view(bundle);
+        if entry.document != before {
+            entry.commit_undo(before, "Set bundle metadata");
+        }
+        Ok(Some(view))
+    }
+
     // ---- dead-key / action editing (P5) ----
 
     /// The active layout's modifier map as `keyMapSelect` rows (P4).
@@ -733,6 +923,84 @@ mod tests {
         assert!(!summary.is_bundle);
         let snap = state.get_snapshot(summary.id, 0, 0, 0, "none").unwrap();
         assert_eq!(snap.keys[0].output.as_deref(), Some("a"));
+    }
+
+    #[test]
+    fn exposes_validation_repair_layers_dead_graph_and_direct_map_edit() {
+        let mut state = AppState::new();
+        let summary = state.new_document(Template::Standard, "Test");
+
+        let report = state.validation_report(summary.id, 0).unwrap();
+        assert_eq!(report.error_count, 0);
+
+        state
+            .set_key_output_in_map(summary.id, 0, "ANSI", 0, 200, "Ω".into())
+            .unwrap();
+        let snap = state
+            .get_snapshot_with_options(
+                summary.id,
+                0,
+                0,
+                0,
+                "none",
+                SnapshotOptions {
+                    include_existing_high_codes: true,
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            snap.keys
+                .iter()
+                .find(|key| key.code == 200)
+                .and_then(|key| key.output.as_deref()),
+            Some("Ω")
+        );
+
+        let matrix = state.layer_matrix(summary.id, 0, 0, true).unwrap();
+        assert!(matrix.key_codes.contains(&200));
+
+        state
+            .make_key_dead(summary.id, 0, 0, 0, 2, "acute", "´")
+            .unwrap();
+        let graph = state.dead_key_graph(summary.id, 0).unwrap();
+        assert!(graph.states.contains(&"acute".to_string()));
+
+        let plan = state.repair_plan(summary.id, 0).unwrap();
+        let fixed = state.apply_repair_plan(summary.id, 0, plan).unwrap();
+        assert!(fixed.iter().all(|code| !code.is_empty()));
+    }
+
+    #[test]
+    fn exposes_bundle_metadata_and_comments() {
+        let mut state = AppState::new();
+        let summary = state.new_document(Template::Standard, "BundleMe");
+        let (_name, files) = state.bundle_files(summary.id).unwrap();
+        let bundle = state.open_bundle_files(files, None).unwrap();
+
+        let metadata = state.bundle_metadata(bundle.id).unwrap().unwrap();
+        assert_eq!(metadata.layout_count, 1);
+        let updated = state
+            .set_bundle_metadata(
+                bundle.id,
+                BundleMetadataPatch {
+                    identifier: Some("app.keymano.test.bundle".into()),
+                    name: Some("Renamed Bundle".into()),
+                    version: None,
+                    build_version: None,
+                    project_name: None,
+                    source_version: None,
+                },
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(updated.identifier, "app.keymano.test.bundle");
+
+        let mut comments = state.comments(bundle.id, 0).unwrap();
+        comments
+            .before
+            .insert("header".into(), vec![" preserved ".into()]);
+        state.set_comments(bundle.id, 0, comments.clone()).unwrap();
+        assert_eq!(state.comments(bundle.id, 0).unwrap(), comments);
     }
 
     #[test]

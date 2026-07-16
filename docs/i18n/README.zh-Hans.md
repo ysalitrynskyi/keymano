@@ -1,5 +1,7 @@
 # Keymano — macOS 键盘布局编辑器
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 这是一个翻译摘要。完整文档为英文：**[README](../../README.md)**。
 
 > 🟢 **不熟悉 GitHub 或不是开发者？** 请阅读通俗英文 **[入门指南](../../docs/GETTING_STARTED.md)**。

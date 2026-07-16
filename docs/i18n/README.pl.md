@@ -1,5 +1,7 @@
 # Keymano — Edytor układów klawiatury dla macOS
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 To jest przetłumaczone streszczenie. Pełna dokumentacja jest po angielsku: **[README](../../README.md)**.
 
 > 🟢 **Nowy na GitHubie lub nie jesteś programistą?** Przeczytaj prostą **[instrukcję startową (po angielsku)](../../docs/GETTING_STARTED.md)**.

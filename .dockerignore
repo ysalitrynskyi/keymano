@@ -24,6 +24,13 @@ src-tauri
 .DS_Store
 Thumbs.db
 
+# Local env/secrets must never enter the Docker build context.
+.env
+.env.*
+.env*
+*.pem
+*.key
+
 # Docker meta (don't ship the build files into their own context).
 .dockerignore
 docker-compose*.yml

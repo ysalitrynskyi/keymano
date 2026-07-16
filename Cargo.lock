@@ -1737,6 +1737,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
+ "zip",
 ]
 
 [[package]]

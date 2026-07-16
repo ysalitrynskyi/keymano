@@ -1,11 +1,19 @@
 //! Thin Tauri command layer (. Locks the session and calls core.
 //! No business logic here — all of it lives in `keymano-session` / core.
 
-use std::path::PathBuf;
+use std::io::{Cursor, Read};
+use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
 
-use keylayout_core::{Issue, KeyboardSnapshot, Template};
-use keymano_session::{ActionsView, AppState, DocSummary, ModifierSelectView, SaveFormat};
+use keylayout_core::bundle::BundleFile;
+use keylayout_core::{
+    Comments, DeadKeyGraph, Issue, KeyboardSnapshot, LayerMatrix, RepairPlan, SnapshotOptions,
+    Template, ValidationReport,
+};
+use keymano_session::{
+    ActionsView, AppState, BundleMetadataPatch, BundleMetadataView, DocSummary, ModifierSelectView,
+    SaveFormat,
+};
 use tauri::State;
 
 pub struct Session(pub Mutex<AppState>);
@@ -14,6 +22,130 @@ type CmdResult<T> = std::result::Result<T, String>;
 
 fn map_err<T>(r: keylayout_core::Result<T>) -> CmdResult<T> {
     r.map_err(|e| e.to_string())
+}
+
+fn is_allowed_external_url(url: &str) -> bool {
+    let Some((scheme, _)) = url.split_once(':') else {
+        return false;
+    };
+    match scheme {
+        "http" => url.starts_with("http://"),
+        "https" => url.starts_with("https://"),
+        "mailto" => true,
+        _ => false,
+    }
+}
+
+fn allocate_install_path<F>(dir: &Path, stem: &str, exists: F) -> PathBuf
+where
+    F: Fn(&Path) -> bool,
+{
+    let mut path = dir.join(format!("{stem}.keylayout"));
+    let mut n = 2;
+    while exists(&path) {
+        path = dir.join(format!("{stem} {n}.keylayout"));
+        n += 1;
+    }
+    path
+}
+
+fn allocate_bundle_install_path<F>(dir: &Path, stem: &str, exists: F) -> PathBuf
+where
+    F: Fn(&Path) -> bool,
+{
+    let mut path = dir.join(format!("{stem}.bundle"));
+    let mut n = 2;
+    while exists(&path) {
+        path = dir.join(format!("{stem} {n}.bundle"));
+        n += 1;
+    }
+    path
+}
+
+fn is_direct_child(base: &Path, target: &Path) -> bool {
+    target.parent() == Some(base)
+}
+
+fn is_bundle_zip(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| name.to_lowercase().ends_with(".bundle.zip"))
+        .unwrap_or(false)
+}
+
+fn zip_to_bundle_files(bytes: &[u8]) -> CmdResult<Vec<BundleFile>> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| e.to_string())?;
+    let mut files = Vec::new();
+    for index in 0..archive.len() {
+        let mut file = archive.by_index(index).map_err(|e| e.to_string())?;
+        if file.is_dir() {
+            continue;
+        }
+        let mut body = Vec::new();
+        file.read_to_end(&mut body).map_err(|e| e.to_string())?;
+        files.push((file.name().to_string(), body));
+    }
+    Ok(files)
+}
+
+fn safe_bundle_target(dir: &Path, rel: &str) -> CmdResult<PathBuf> {
+    let rel_path = Path::new(rel);
+    if rel_path.components().any(|component| {
+        matches!(
+            component,
+            Component::Prefix(_) | Component::RootDir | Component::ParentDir
+        )
+    }) {
+        return Err(format!("unsafe bundle path: {rel}"));
+    }
+    Ok(dir.join(rel_path))
+}
+
+fn write_bundle_files_to_dir(dir: &Path, files: Vec<BundleFile>) -> CmdResult<()> {
+    for (rel, bytes) in files {
+        let path = safe_bundle_target(dir, &rel)?;
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        std::fs::write(path, bytes).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+fn input_sources_from_hitoolbox_json(
+    json: &serde_json::Value,
+    installed: &[InstalledLayout],
+) -> Vec<InputSource> {
+    let find_file = |name: &str| -> Option<String> {
+        let n = name.to_lowercase();
+        installed
+            .iter()
+            .find(|l| l.name.to_lowercase() == n)
+            .map(|l| l.path.clone())
+    };
+
+    let mut seen = std::collections::BTreeSet::new();
+    let mut out = Vec::new();
+    for key in ["AppleEnabledInputSources", "AppleSelectedInputSources"] {
+        if let Some(arr) = json.get(key).and_then(|v| v.as_array()) {
+            for item in arr {
+                let kind = item.get("InputSourceKind").and_then(|v| v.as_str());
+                if kind != Some("Keyboard Layout") {
+                    continue;
+                }
+                if let Some(name) = item.get("KeyboardLayout Name").and_then(|v| v.as_str()) {
+                    if seen.insert(name.to_string()) {
+                        out.push(InputSource {
+                            name: name.to_string(),
+                            file: find_file(name),
+                        });
+                    }
+                }
+            }
+        }
+    }
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    out
 }
 
 #[tauri::command]
@@ -31,9 +163,7 @@ pub fn quit_app(app: tauri::AppHandle) {
 /// launch a local handler. Cross-platform.
 #[tauri::command]
 pub fn open_external(url: String) -> CmdResult<()> {
-    let ok =
-        url.starts_with("https://") || url.starts_with("http://") || url.starts_with("mailto:");
-    if !ok {
+    if !is_allowed_external_url(&url) {
         return Err("Only http(s) and mailto links can be opened".to_string());
     }
     open_with_os(&url)
@@ -104,7 +234,7 @@ fn open_with_os(target: &str) -> CmdResult<()> {
     Ok(())
 }
 
-#[derive(serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct InstalledLayout {
     pub name: String,
     pub path: String,
@@ -112,7 +242,7 @@ pub struct InstalledLayout {
     pub scope: String, // "user" | "system"
 }
 
-#[derive(serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct InputSource {
     pub name: String,
     /// File path if this layout is backed by an editable `.keylayout`/`.bundle`
@@ -140,38 +270,8 @@ pub fn list_input_sources() -> Vec<InputSource> {
             return Vec::new();
         };
 
-        // index installed files by lowercased stem for matching
         let installed = list_installed_layouts();
-        let find_file = |name: &str| -> Option<String> {
-            let n = name.to_lowercase();
-            installed
-                .iter()
-                .find(|l| l.name.to_lowercase() == n)
-                .map(|l| l.path.clone())
-        };
-
-        let mut seen = std::collections::BTreeSet::new();
-        let mut out = Vec::new();
-        for key in ["AppleEnabledInputSources", "AppleSelectedInputSources"] {
-            if let Some(arr) = json.get(key).and_then(|v| v.as_array()) {
-                for item in arr {
-                    let kind = item.get("InputSourceKind").and_then(|v| v.as_str());
-                    if kind != Some("Keyboard Layout") {
-                        continue;
-                    }
-                    if let Some(name) = item.get("KeyboardLayout Name").and_then(|v| v.as_str()) {
-                        if seen.insert(name.to_string()) {
-                            out.push(InputSource {
-                                name: name.to_string(),
-                                file: find_file(name),
-                            });
-                        }
-                    }
-                }
-            }
-        }
-        out.sort_by(|a, b| a.name.cmp(&b.name));
-        return out;
+        return input_sources_from_hitoolbox_json(&json, &installed);
     }
     #[allow(unreachable_code)]
     Vec::new()
@@ -236,7 +336,11 @@ pub fn new_document(
 pub fn open_file(state: State<Session>, path: String) -> CmdResult<DocSummary> {
     let p = PathBuf::from(&path);
     let mut s = state.0.lock().unwrap();
-    if p.extension().map(|e| e == "bundle").unwrap_or(false) || p.is_dir() {
+    if is_bundle_zip(&p) {
+        let bytes = std::fs::read(&p).map_err(|e| e.to_string())?;
+        let files = zip_to_bundle_files(&bytes)?;
+        map_err(s.open_bundle_files(files, Some(p)))
+    } else if p.extension().map(|e| e == "bundle").unwrap_or(false) || p.is_dir() {
         map_err(s.open_bundle_dir(p))
     } else {
         let xml = std::fs::read_to_string(&p).map_err(|e| e.to_string())?;
@@ -293,6 +397,29 @@ pub fn get_snapshot(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
+pub fn get_snapshot_with_options(
+    state: State<Session>,
+    id: u32,
+    kb_index: usize,
+    type_code: u32,
+    mask: u16,
+    dead_state: String,
+    include_existing_high_codes: bool,
+) -> CmdResult<KeyboardSnapshot> {
+    map_err(state.0.lock().unwrap().get_snapshot_with_options(
+        id,
+        kb_index,
+        type_code,
+        mask,
+        &dead_state,
+        SnapshotOptions {
+            include_existing_high_codes,
+        },
+    ))
+}
+
+#[tauri::command]
 pub fn get_xml(
     state: State<Session>,
     id: u32,
@@ -311,6 +438,87 @@ pub fn get_xml(
 #[tauri::command]
 pub fn validate(state: State<Session>, id: u32, kb_index: usize) -> CmdResult<Vec<Issue>> {
     map_err(state.0.lock().unwrap().validate(id, kb_index))
+}
+
+#[tauri::command]
+pub fn validation_report(
+    state: State<Session>,
+    id: u32,
+    kb_index: usize,
+) -> CmdResult<ValidationReport> {
+    map_err(state.0.lock().unwrap().validation_report(id, kb_index))
+}
+
+#[tauri::command]
+pub fn repair_plan(state: State<Session>, id: u32, kb_index: usize) -> CmdResult<RepairPlan> {
+    map_err(state.0.lock().unwrap().repair_plan(id, kb_index))
+}
+
+#[tauri::command]
+pub fn apply_repair_plan(
+    state: State<Session>,
+    id: u32,
+    kb_index: usize,
+    plan: RepairPlan,
+) -> CmdResult<Vec<String>> {
+    map_err(
+        state
+            .0
+            .lock()
+            .unwrap()
+            .apply_repair_plan(id, kb_index, plan),
+    )
+}
+
+#[tauri::command]
+pub fn layer_matrix(
+    state: State<Session>,
+    id: u32,
+    kb_index: usize,
+    type_code: u32,
+    include_high_codes: bool,
+) -> CmdResult<LayerMatrix> {
+    map_err(
+        state
+            .0
+            .lock()
+            .unwrap()
+            .layer_matrix(id, kb_index, type_code, include_high_codes),
+    )
+}
+
+#[tauri::command]
+pub fn dead_key_graph(state: State<Session>, id: u32, kb_index: usize) -> CmdResult<DeadKeyGraph> {
+    map_err(state.0.lock().unwrap().dead_key_graph(id, kb_index))
+}
+
+#[tauri::command]
+pub fn comments(state: State<Session>, id: u32, kb_index: usize) -> CmdResult<Comments> {
+    map_err(state.0.lock().unwrap().comments(id, kb_index))
+}
+
+#[tauri::command]
+pub fn set_comments(
+    state: State<Session>,
+    id: u32,
+    kb_index: usize,
+    comments: Comments,
+) -> CmdResult<()> {
+    map_err(state.0.lock().unwrap().set_comments(id, kb_index, comments))
+}
+
+#[tauri::command]
+pub fn bundle_metadata(state: State<Session>, id: u32) -> CmdResult<Option<BundleMetadataView>> {
+    map_err(state.0.lock().unwrap().bundle_metadata(id))
+}
+
+#[tauri::command]
+pub fn set_bundle_metadata(
+    state: State<Session>,
+    id: u32,
+    patch: BundleMetadataPatch,
+) -> CmdResult<Option<BundleMetadataView>> {
+    map_err(state.0.lock().unwrap().set_bundle_metadata(id, patch))
 }
 
 #[tauri::command]
@@ -392,6 +600,25 @@ pub fn set_key_output(
         code,
         output,
     ))
+}
+
+#[tauri::command]
+pub fn set_key_output_in_map(
+    state: State<Session>,
+    id: u32,
+    kb_index: usize,
+    set_id: String,
+    map_index: u32,
+    code: u16,
+    output: String,
+) -> CmdResult<()> {
+    map_err(
+        state
+            .0
+            .lock()
+            .unwrap()
+            .set_key_output_in_map(id, kb_index, &set_id, map_index, code, output),
+    )
 }
 
 #[tauri::command]
@@ -522,9 +749,8 @@ pub fn install_layout(state: State<Session>, id: u32, kb_index: usize) -> CmdRes
     #[cfg(target_os = "macos")]
     {
         let s = state.0.lock().unwrap();
-        let xml = map_err(s.keylayout_string(id, kb_index))?;
         let name = map_err(s.summary(id))?.name;
-        drop(s);
+        let summary = map_err(s.summary(id))?;
         // Single sanitizer (in the tested core): keeps non-ASCII letters but
         // maps path separators, control chars, and bidi/format controls to '-'
         // — so a Cyrillic name doesn't collide on "Keyboard.keylayout" and a
@@ -533,14 +759,22 @@ pub fn install_layout(state: State<Session>, id: u32, kb_index: usize) -> CmdRes
         let home = std::env::var("HOME").map_err(|e| e.to_string())?;
         let dir = format!("{home}/Library/Keyboard Layouts");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        let base = Path::new(&dir);
+        if summary.is_bundle {
+            let (_bundle_name, files) = map_err(s.bundle_files(id))?;
+            drop(s);
+            // Install bundle docs as real `.bundle` packages, not just the
+            // active `.keylayout`, and still never clobber an existing layout.
+            let path = allocate_bundle_install_path(base, &stem, |p| p.exists());
+            write_bundle_files_to_dir(&path, files)?;
+            return Ok(path.display().to_string());
+        }
+
+        let xml = map_err(s.keylayout_string(id, kb_index))?;
+        drop(s);
         // Never clobber an existing on-disk layout with the same name — pick a
         // free " N" suffix instead (review P1-09).
-        let mut path = std::path::PathBuf::from(&dir).join(format!("{stem}.keylayout"));
-        let mut n = 2;
-        while path.exists() {
-            path = std::path::PathBuf::from(&dir).join(format!("{stem} {n}.keylayout"));
-            n += 1;
-        }
+        let path = allocate_install_path(base, &stem, |p| p.exists());
         std::fs::write(&path, xml).map_err(|e| e.to_string())?;
         Ok(path.display().to_string())
     }
@@ -564,7 +798,7 @@ pub fn uninstall_layout(path: String) -> CmdResult<String> {
             .map_err(|e| e.to_string())?;
         let target = std::fs::canonicalize(&path).map_err(|e| e.to_string())?;
         // Must live *directly* in the user-scope Keyboard Layouts folder.
-        if target.parent() != Some(base.as_path()) {
+        if !is_direct_child(&base, &target) {
             return Err("Only user-installed layouts can be removed".to_string());
         }
         let file_name = target
@@ -619,5 +853,90 @@ pub fn save_file(
             map_err(s.mark_saved(id, p))
         }
         SaveFormat::Bundle => map_err(s.save_bundle_to(id, p)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn external_url_policy_allows_only_safe_schemes() {
+        assert!(is_allowed_external_url("https://keymano.ys.contact"));
+        assert!(is_allowed_external_url("http://localhost:1420"));
+        assert!(is_allowed_external_url("mailto:support@example.com"));
+        assert!(!is_allowed_external_url("file:///etc/passwd"));
+        assert!(!is_allowed_external_url("ssh://example.com"));
+        assert!(!is_allowed_external_url("javascript:alert(1)"));
+    }
+
+    #[test]
+    fn install_path_allocator_uses_first_free_suffix() {
+        let dir = Path::new("/Users/me/Library/Keyboard Layouts");
+        let occupied = [dir.join("Daily.keylayout"), dir.join("Daily 2.keylayout")];
+
+        let path = allocate_install_path(dir, "Daily", |p| occupied.iter().any(|x| x == p));
+
+        assert_eq!(path, dir.join("Daily 3.keylayout"));
+    }
+
+    #[test]
+    fn uninstall_boundary_requires_direct_child_of_user_layouts_dir() {
+        let base = Path::new("/Users/me/Library/Keyboard Layouts");
+
+        assert!(is_direct_child(
+            base,
+            Path::new("/Users/me/Library/Keyboard Layouts/Daily.keylayout")
+        ));
+        assert!(!is_direct_child(
+            base,
+            Path::new("/Library/Keyboard Layouts/Daily.keylayout")
+        ));
+        assert!(!is_direct_child(
+            base,
+            Path::new("/Users/me/Library/Keyboard Layouts/Nested/Daily.keylayout")
+        ));
+    }
+
+    #[test]
+    fn input_source_parser_dedupes_and_matches_installed_files() {
+        let json: serde_json::Value = serde_json::json!({
+            "AppleEnabledInputSources": [
+                { "InputSourceKind": "Keyboard Layout", "KeyboardLayout Name": "Daily" },
+                { "InputSourceKind": "Keyboard Layout", "KeyboardLayout Name": "U.S." },
+                { "InputSourceKind": "Keyboard Layout", "KeyboardLayout Name": "Daily" }
+            ],
+            "AppleSelectedInputSources": [
+                { "InputSourceKind": "Keyboard Layout", "KeyboardLayout Name": "Emoji" },
+                { "InputSourceKind": "Input Mode", "KeyboardLayout Name": "Ignored" }
+            ]
+        });
+        let installed = vec![InstalledLayout {
+            name: "Daily".to_string(),
+            path: "/Users/me/Library/Keyboard Layouts/Daily.keylayout".to_string(),
+            is_bundle: false,
+            scope: "user".to_string(),
+        }];
+
+        let parsed = input_sources_from_hitoolbox_json(&json, &installed);
+
+        assert_eq!(
+            parsed,
+            vec![
+                InputSource {
+                    name: "Daily".to_string(),
+                    file: Some("/Users/me/Library/Keyboard Layouts/Daily.keylayout".to_string())
+                },
+                InputSource {
+                    name: "Emoji".to_string(),
+                    file: None
+                },
+                InputSource {
+                    name: "U.S.".to_string(),
+                    file: None
+                },
+            ],
+        );
     }
 }

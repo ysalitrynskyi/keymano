@@ -92,18 +92,19 @@ edit it by hand or commit it.
 ```bash
 pnpm install
 rustup target add wasm32-unknown-unknown && cargo install wasm-pack  # once
-pnpm lint && pnpm wasm:build && pnpm exec tsc -b && pnpm test   # wasm:build generates src/wasm types needed by tsc
+pnpm lint && pnpm wasm:build && pnpm exec tsc -b && pnpm test && pnpm coverage
+pnpm e2e                                                        # Playwright Chromium smoke
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 pnpm build
 ```
 
-Expect ~136 Rust tests (workspace) and ~150 vitest tests (the web suite drives
+Expect ~140 Rust tests (workspace) and ~150 vitest tests (the web suite drives
 the real core through wasm — incl. bundle-zip export — plus a deploy-CSP guard
 that renders the real nginx entrypoint to a temp dir, plus a sanitize-stem
 TS↔Rust parity test, plus ipc-routing tests for the v0.2.2 install paths). CI
-also runs coverage gates (core ≥90%, frontend ≥80%).
+also runs coverage gates (core ≥90%, frontend ≥60%) and Playwright Chromium e2e.
 
 ---
 

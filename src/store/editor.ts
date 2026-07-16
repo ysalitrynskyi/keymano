@@ -1,16 +1,16 @@
 // Zustand store: UI/selection/interaction state + snapshot cache (.
-// Holds NO authoritative model — that lives in core. Edits go through ipc.
+// Holds NO authoritative model — that lives in core. Edits go through session service.
 
 import { create } from "zustand";
 import { toast } from "sonner";
 
-import { ipc } from "@/lib/ipc";
 import i18n from "@/lib/i18n";
 import { Mod } from "@/lib/types";
 import type { DocSummary, Issue, KeyboardSnapshot, RecentFile } from "@/lib/types";
 import { geometryFor } from "@/features/keyboard/geometry";
 import { buildReferenceSheetSvg, downloadSvgAsPng } from "@/features/keyboard/referenceSheet";
 import type { SheetSection } from "@/features/keyboard/referenceSheet";
+import { session } from "@/services/session";
 
 /** i18n shortcut bound to the live language (re-resolves on every call). */
 const tr = (key: string, vars?: Record<string, unknown>) =>
@@ -199,25 +199,25 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
 
   refreshDocs: async () => {
-    set({ docs: await ipc.listDocuments() });
+    set({ docs: await session.listDocuments() });
   },
 
   newDocument: async (template, name) => {
-    const doc = await guard("guard.newLayout", () => ipc.newDocument(template, name));
+    const doc = await guard("guard.newLayout", () => session.newDocument(template, name));
     if (!doc) return;
     await get().refreshDocs();
     await get().setActiveDoc(doc.id);
   },
 
   importXml: async (xml) => {
-    const doc = await guard("guard.open", () => ipc.openContent(xml));
+    const doc = await guard("guard.open", () => session.openContent(xml));
     if (!doc) return;
     await get().refreshDocs();
     await get().setActiveDoc(doc.id);
   },
 
   openFile: async () => {
-    const doc = await guard("guard.openFile", () => ipc.openFileDialog());
+    const doc = await guard("guard.openFile", () => session.openFileDialog());
     if (!doc) return;
     await get().refreshDocs();
     await get().setActiveDoc(doc.id);
@@ -225,7 +225,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
 
   openInstalled: async (path) => {
-    const doc = await guard("guard.openLayout", () => ipc.openPath(path));
+    const doc = await guard("guard.openLayout", () => session.openPath(path));
     if (!doc) return;
     await get().refreshDocs();
     await get().setActiveDoc(doc.id);
@@ -241,11 +241,11 @@ export const useEditor = create<EditorState>((set, get) => ({
     const { activeDocId, kbIndex, docs } = get();
     if (activeDocId == null) return false;
     const doc = docs.find((d) => d.id === activeDocId);
-    if (!ipc.isTauri || !doc?.path) return get().saveActiveAs();
+    if (!session.isDesktop || !doc?.path) return get().saveActiveAs();
     const path = doc.path;
     const format = doc.is_bundle ? "bundle" : "keylayout";
     const ok = await guard("guard.save", async () => {
-      await ipc.saveFile(activeDocId, kbIndex, path, format);
+      await session.saveFile(activeDocId, kbIndex, path, format);
       return true;
     });
     if (ok) {
@@ -267,8 +267,8 @@ export const useEditor = create<EditorState>((set, get) => ({
     const name = doc?.name ?? tr("tabs.untitled");
     const ok = await guard("guard.save", () =>
       doc?.is_bundle
-        ? ipc.exportBundleDialog(activeDocId, kbIndex, name)
-        : ipc.saveFileDialog(activeDocId, kbIndex, name),
+        ? session.exportBundleDialog(activeDocId, kbIndex, name)
+        : session.saveFileDialog(activeDocId, kbIndex, name),
     );
     if (ok) {
       await get().refreshDocs();
@@ -282,7 +282,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   installActive: async () => {
     const { activeDocId, kbIndex } = get();
     if (activeDocId == null) return;
-    const res = await guard("guard.install", () => ipc.installLayout(activeDocId, kbIndex));
+    const res = await guard("guard.install", () => session.installLayout(activeDocId, kbIndex));
     if (!res) return;
     if (res.kind === "downloaded") {
       toast.success(tr("toast.downloaded"), { description: tr("toast.downloadedDesc") });
@@ -295,7 +295,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     const { activeDocId, kbIndex, docs } = get();
     if (activeDocId == null) return;
     const name = docs.find((d) => d.id === activeDocId)?.name ?? tr("tabs.untitled");
-    const ok = await guard("guard.exportBundle", () => ipc.exportBundleDialog(activeDocId, kbIndex, name));
+    const ok = await guard("guard.exportBundle", () => session.exportBundleDialog(activeDocId, kbIndex, name));
     if (ok) toast.success(tr("toast.exportedBundle"));
   },
 
@@ -306,7 +306,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
 
   closeDoc: async (id) => {
-    await ipc.closeDocument(id);
+    await session.closeDocument(id);
     await get().refreshDocs();
     const docs = get().docs;
     if (get().activeDocId === id) {
@@ -326,7 +326,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     }),
 
   renameDoc: async (id, name) => {
-    const r = await guard("guard.rename", () => ipc.renameDocument(id, get().kbIndex, name));
+    const r = await guard("guard.rename", () => session.renameDocument(id, get().kbIndex, name));
     if (r) await get().refreshDocs();
   },
 
@@ -341,7 +341,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   duplicateActive: async () => {
     const { activeDocId } = get();
     if (activeDocId == null) return;
-    const doc = await guard("guard.duplicate", () => ipc.duplicateDocument(activeDocId));
+    const doc = await guard("guard.duplicate", () => session.duplicateDocument(activeDocId));
     if (!doc) return;
     await get().refreshDocs();
     await get().setActiveDoc(doc.id);
@@ -379,7 +379,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     }
     set({ loading: true });
     try {
-      const snap = await ipc.getSnapshot(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState);
+      const snap = await session.getSnapshot(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState);
       set({ snapshot: snap });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -392,14 +392,14 @@ export const useEditor = create<EditorState>((set, get) => ({
   refreshIssues: async () => {
     const { activeDocId, kbIndex } = get();
     if (activeDocId == null) return;
-    set({ issues: await ipc.validate(activeDocId, kbIndex) });
+    set({ issues: await session.validate(activeDocId, kbIndex) });
   },
 
   setKeyOutput: async (code, output) => {
     const { activeDocId, kbIndex, kbType, modMask, deadState } = get();
     if (activeDocId == null) return;
     const snap = await guard("guard.setOutput", () =>
-      ipc.setKeyOutput(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code, output),
+      session.setKeyOutput(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code, output),
     );
     if (!snap) return;
     set({ snapshot: snap });
@@ -410,7 +410,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   clearKey: async (code) => {
     const { activeDocId, kbIndex, kbType, modMask, deadState } = get();
     if (activeDocId == null) return;
-    const snap = await ipc.clearKey(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code);
+    const snap = await session.clearKey(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code);
     set({ snapshot: snap });
     await get().refreshDocs();
     await get().refreshIssues();
@@ -419,7 +419,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   makeKeyDead: async (code, state, terminator) => {
     const { activeDocId, kbIndex, kbType, modMask } = get();
     if (activeDocId == null) return;
-    const snap = await ipc.makeKeyDead(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, code, state, terminator);
+    const snap = await session.makeKeyDead(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, code, state, terminator);
     set({ snapshot: snap, deadState: "none" });
     await get().refreshDocs();
     await get().refreshIssues();
@@ -428,7 +428,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   unlinkKey: async (code) => {
     const { activeDocId, kbIndex, kbType, modMask, deadState } = get();
     if (activeDocId == null) return;
-    const snap = await ipc.unlinkKey(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code);
+    const snap = await session.unlinkKey(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code);
     set({ snapshot: snap });
     await get().refreshDocs();
     await get().refreshIssues();
@@ -437,7 +437,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   relinkKey: async (code) => {
     const { activeDocId, kbIndex, kbType, modMask, deadState } = get();
     if (activeDocId == null) return;
-    const snap = await ipc.relinkKey(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code);
+    const snap = await session.relinkKey(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, code);
     set({ snapshot: snap });
     await get().refreshDocs();
     await get().refreshIssues();
@@ -453,7 +453,7 @@ export const useEditor = create<EditorState>((set, get) => ({
       // Derive one section per DECLARED keymap (from the layout's real modifier
       // map), synthesising a representative mask for each — so the sheet covers
       // every map even when a layout's modifiers aren't the standard set.
-      const rows = await ipc.modifierMapView(activeDocId, kbIndex, type).catch(() => []);
+      const rows = await session.modifierMapView(activeDocId, kbIndex, type).catch(() => []);
       const fallback: Array<[number, string]> = [
         [0, tr("refSheet.noModifiers")],
         [Mod.ShiftL, tr("refSheet.shift")],
@@ -467,12 +467,12 @@ export const useEditor = create<EditorState>((set, get) => ({
           if (seen.has(row.map_index)) continue;
           seen.add(row.map_index);
           const mask = specToMask(row.specs[0] ?? "");
-          const snap = await ipc.getSnapshot(activeDocId, kbIndex, type, mask, "none");
+          const snap = await session.getSnapshot(activeDocId, kbIndex, type, mask, "none");
           sections.push({ label: row.specs.filter(Boolean).join("  ·  ") || tr("refSheet.noModifiers"), keys: snap.keys });
         }
       } else {
         for (const [mask, label] of fallback) {
-          const snap = await ipc.getSnapshot(activeDocId, kbIndex, type, mask, "none");
+          const snap = await session.getSnapshot(activeDocId, kbIndex, type, mask, "none");
           if (seen.has(snap.modifier_index)) continue;
           seen.add(snap.modifier_index);
           sections.push({ label, keys: snap.keys });
@@ -486,7 +486,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   swapKeys: async (a, b) => {
     const { activeDocId, kbIndex, kbType, modMask, deadState } = get();
     if (activeDocId == null) return;
-    const snap = await ipc.swapKeys(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, a, b);
+    const snap = await session.swapKeys(activeDocId, kbIndex, TYPE_CODE[kbType], modMask, deadState, a, b);
     set({ snapshot: snap, interactionMode: "idle", swapFirst: null });
     await get().refreshDocs();
     await get().refreshIssues();
@@ -507,7 +507,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   repair: async () => {
     const { activeDocId, kbIndex } = get();
     if (activeDocId == null) return;
-    const fixed = await guard("guard.repair", () => ipc.repair(activeDocId, kbIndex));
+    const fixed = await guard("guard.repair", () => session.repair(activeDocId, kbIndex));
     if (fixed === undefined) return;
     await get().refreshSnapshot();
     await get().refreshIssues();
@@ -517,7 +517,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   undo: async () => {
     const { activeDocId } = get();
     if (activeDocId == null) return;
-    await ipc.undo(activeDocId);
+    await session.undo(activeDocId);
     await get().refreshSnapshot();
     await get().refreshDocs();
     await get().refreshIssues();
@@ -526,7 +526,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   redo: async () => {
     const { activeDocId } = get();
     if (activeDocId == null) return;
-    await ipc.redo(activeDocId);
+    await session.redo(activeDocId);
     await get().refreshSnapshot();
     await get().refreshDocs();
     await get().refreshIssues();

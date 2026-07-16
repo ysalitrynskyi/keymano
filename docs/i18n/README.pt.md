@@ -1,5 +1,7 @@
 # Keymano — Editor de Layout de Teclado para macOS
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 Este é um resumo traduzido. A documentação completa está em inglês: **[README](../../README.md)**.
 
 > 🟢 **Novo no GitHub ou não é desenvolvedor?** Leia o **[guia de início (inglês)](../../docs/GETTING_STARTED.md)** em linguagem simples.

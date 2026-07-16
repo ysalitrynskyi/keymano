@@ -1,5 +1,7 @@
 # Keymano — macOS 키보드 레이아웃 편집기
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 이것은 번역된 요약본입니다. 전체 문서는 영어로 제공됩니다: **[README](../../README.md)**.
 
 > 🟢 **GitHub이 처음이거나 개발자가 아니신가요?** 쉬운 영어 **[시작 가이드](../../docs/GETTING_STARTED.md)**를 읽어 보세요.

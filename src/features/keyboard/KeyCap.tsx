@@ -104,6 +104,7 @@ export const KeyCap = React.memo(function KeyCap({
       aria-label={`key ${geo.code}: ${main || (chip ?? "empty")}`}
       tabIndex={-1}
       data-keycap={editable ? "1" : undefined}
+      data-key-code={geo.code}
       onClick={handleClick}
       onDoubleClick={handleDouble}
       onContextMenu={onContext}

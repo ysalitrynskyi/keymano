@@ -6,14 +6,21 @@ import i18n from "./i18n";
 import { WasmBackend } from "./wasm-core";
 import type {
   ActionsView,
+  BundleMetadataPatch,
+  BundleMetadataView,
+  Comments,
+  DeadKeyGraph,
   DocSummary,
   InputSource,
   InstalledLayout,
   Issue,
   KeyboardSnapshot,
+  LayerMatrix,
   ModifierSelectView,
+  RepairPlan,
   SaveFormat,
   TemplateName,
+  ValidationReport,
 } from "./types";
 
 const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -175,11 +182,9 @@ export const ipc = {
   /** Open a layout by an explicit filesystem path. */
   async openPath(path: string): Promise<DocSummary> {
     if (isTauri) return invoke("open_file", { path });
-    // web: a browser can't read an arbitrary filesystem path; fall back to a
-    // fresh layout named after the file (this branch is desktop-only in
-    // practice — web docs have no on-disk path to recall).
-    const m = /([^/]+)\.(keylayout|bundle)$/.exec(path);
-    return getWeb().newDocument("standard", m ? m[1] : "Imported");
+    throw new Error(
+      `Web build cannot reopen filesystem paths (${path}). Use Open… and choose the .keylayout file again.`,
+    );
   },
 
   /** Native open dialog (Tauri) or browser file picker (web). */
@@ -189,7 +194,7 @@ export const ipc = {
       const path = await open({
         multiple: false,
         directory: false,
-        filters: [{ name: i18n.t("dialog.keyboardLayout"), extensions: ["keylayout", "bundle"] }],
+        filters: [{ name: i18n.t("dialog.keyboardLayout"), extensions: ["keylayout", "bundle", "zip"] }],
       });
       if (!path || typeof path !== "string") return null;
       return invoke("open_file", { path });
@@ -197,11 +202,15 @@ export const ipc = {
     return new Promise((resolve) => {
       const input = document.createElement("input");
       input.type = "file";
-      input.accept = ".keylayout";
+      input.accept = ".keylayout,.bundle.zip";
       input.onchange = async () => {
         const file = input.files?.[0];
         if (!file) return resolve(null);
-        resolve(await this.openContent(await file.text()));
+        if (file.name.toLowerCase().endsWith(".bundle.zip")) {
+          resolve(await getWeb().openBundleZip(new Uint8Array(await file.arrayBuffer())));
+        } else {
+          resolve(await this.openContent(await file.text()));
+        }
       };
       input.click();
     });
@@ -261,6 +270,34 @@ export const ipc = {
     return getWeb().getSnapshot(id, kbIndex, typeCode, mask, deadState);
   },
 
+  async getSnapshotWithOptions(
+    id: number,
+    kbIndex: number,
+    typeCode: number,
+    mask: number,
+    deadState: string,
+    options: { includeExistingHighCodes?: boolean } = {},
+  ): Promise<KeyboardSnapshot> {
+    const includeExistingHighCodes = options.includeExistingHighCodes ?? false;
+    if (isTauri)
+      return invoke("get_snapshot_with_options", {
+        id,
+        kbIndex,
+        typeCode,
+        mask,
+        deadState,
+        includeExistingHighCodes,
+      });
+    return getWeb().getSnapshotWithOptions(
+      id,
+      kbIndex,
+      typeCode,
+      mask,
+      deadState,
+      includeExistingHighCodes,
+    );
+  },
+
   async setKeyOutput(
     id: number,
     kbIndex: number,
@@ -273,6 +310,19 @@ export const ipc = {
     if (isTauri)
       return invoke("set_key_output", { id, kbIndex, typeCode, mask, deadState, code, output });
     return getWeb().setKeyOutput(id, kbIndex, typeCode, mask, deadState, code, output);
+  },
+
+  async setKeyOutputInMap(
+    id: number,
+    kbIndex: number,
+    setId: string,
+    mapIndex: number,
+    code: number,
+    output: string,
+  ): Promise<void> {
+    if (isTauri)
+      return invoke("set_key_output_in_map", { id, kbIndex, setId, mapIndex, code, output });
+    return getWeb().setKeyOutputInMap(id, kbIndex, setId, mapIndex, code, output);
   },
 
   async clearKey(
@@ -358,6 +408,50 @@ export const ipc = {
   async validate(id: number, kbIndex: number): Promise<Issue[]> {
     if (isTauri) return invoke("validate", { id, kbIndex });
     return getWeb().validate(id, kbIndex);
+  },
+  async validationReport(id: number, kbIndex: number): Promise<ValidationReport> {
+    if (isTauri) return invoke("validation_report", { id, kbIndex });
+    return getWeb().validationReport(id, kbIndex);
+  },
+  async repairPlan(id: number, kbIndex: number): Promise<RepairPlan> {
+    if (isTauri) return invoke("repair_plan", { id, kbIndex });
+    return getWeb().repairPlan(id, kbIndex);
+  },
+  async applyRepairPlan(id: number, kbIndex: number, plan: RepairPlan): Promise<string[]> {
+    if (isTauri) return invoke("apply_repair_plan", { id, kbIndex, plan });
+    return getWeb().applyRepairPlan(id, kbIndex, plan);
+  },
+  async layerMatrix(
+    id: number,
+    kbIndex: number,
+    typeCode: number,
+    includeHighCodes = false,
+  ): Promise<LayerMatrix> {
+    if (isTauri) return invoke("layer_matrix", { id, kbIndex, typeCode, includeHighCodes });
+    return getWeb().layerMatrix(id, kbIndex, typeCode, includeHighCodes);
+  },
+  async deadKeyGraph(id: number, kbIndex: number): Promise<DeadKeyGraph> {
+    if (isTauri) return invoke("dead_key_graph", { id, kbIndex });
+    return getWeb().deadKeyGraph(id, kbIndex);
+  },
+  async comments(id: number, kbIndex: number): Promise<Comments> {
+    if (isTauri) return invoke("comments", { id, kbIndex });
+    return getWeb().comments(id, kbIndex);
+  },
+  async setComments(id: number, kbIndex: number, comments: Comments): Promise<void> {
+    if (isTauri) return invoke("set_comments", { id, kbIndex, comments });
+    return getWeb().setComments(id, kbIndex, comments);
+  },
+  async bundleMetadata(id: number): Promise<BundleMetadataView | null> {
+    if (isTauri) return invoke("bundle_metadata", { id });
+    return getWeb().bundleMetadata(id);
+  },
+  async setBundleMetadata(
+    id: number,
+    patch: BundleMetadataPatch,
+  ): Promise<BundleMetadataView | null> {
+    if (isTauri) return invoke("set_bundle_metadata", { id, patch });
+    return getWeb().setBundleMetadata(id, patch);
   },
   async repair(id: number, kbIndex: number): Promise<string[]> {
     if (isTauri) return invoke("repair", { id, kbIndex });

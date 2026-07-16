@@ -4,6 +4,45 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct KeyboardAddress {
+    pub keyboard_index: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct LayerAddress {
+    pub keyboard_index: usize,
+    pub map_set: String,
+    pub map_index: u32,
+    pub dead_state: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct KeyAddress {
+    pub keyboard_index: usize,
+    pub map_set: String,
+    pub map_index: u32,
+    pub key_code: u16,
+    pub dead_state: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "value")]
+pub enum CommentAnchor {
+    Header,
+    Keyboard(KeyboardAddress),
+    Layer(LayerAddress),
+    Key(KeyAddress),
+    Action {
+        keyboard_index: usize,
+        action_id: String,
+    },
+    State {
+        keyboard_index: usize,
+        state: String,
+    },
+}
+
 /// A whole document: a standalone keyboard or a bundle of layouts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", content = "data")]
@@ -390,5 +429,19 @@ mod tests {
         assert!(kb.layout_for_type(0).is_some());
         assert!(kb.layout_for_type(17).is_some());
         assert!(kb.layout_for_type(18).is_none());
+    }
+
+    #[test]
+    fn typed_addresses_are_stable_and_serializable() {
+        let key = KeyAddress {
+            keyboard_index: 0,
+            map_set: "ANSI".into(),
+            map_index: 1,
+            key_code: 42,
+            dead_state: "none".into(),
+        };
+        let json = serde_json::to_string(&CommentAnchor::Key(key.clone())).unwrap();
+        let back: CommentAnchor = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, CommentAnchor::Key(key));
     }
 }

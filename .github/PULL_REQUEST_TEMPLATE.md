@@ -10,7 +10,9 @@
 
 - [ ] `pnpm lint` and `pnpm exec tsc -b`
 - [ ] `pnpm test`
-- [ ] `cargo test -p keylayout-core -p keymano-session`
+- [ ] `pnpm coverage`
+- [ ] `pnpm e2e`
+- [ ] `cargo test -p keylayout-core -p keymano-session -p keymano-wasm`
 - [ ] `cargo clippy --workspace --all-targets -- -D warnings`
 - [ ] Verified in `pnpm dev` and/or `pnpm tauri dev`
 

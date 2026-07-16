@@ -18,6 +18,8 @@
   --accent: #b5562a; /* burnt sienna */
   --accent-soft: #c9742f;
   --accent-fg: #fbf7ef;
+  --danger: #b43f32;
+  --danger-fg: #fff7f3;
   --gold: #a98342;
 
   /* background hairline strength (light theme) */
@@ -64,6 +66,8 @@
   --accent: #e08b3c; /* warm amber lamp */
   --accent-soft: #c9742f;
   --accent-fg: #1a1206;
+  --danger: #ff6b5f;
+  --danger-fg: #1f0905;
   --gold: #d8a85a;
 
   /* dark theme: lighter text → lines read stronger, so dial them down */

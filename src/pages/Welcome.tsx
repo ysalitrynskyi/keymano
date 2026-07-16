@@ -2,24 +2,41 @@
 
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { FilePlus2, FolderOpen, Sparkles, MonitorCog, Clock, FileText, Copy, FolderSearch } from "lucide-react";
+import { FilePlus2, FolderOpen, Sparkles, MonitorCog, Clock, FileText, Copy, FolderSearch, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button, Card } from "@/components/ui";
+import { ActionCard, Button, Card, Input } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 import { Wordmark } from "@/components/Wordmark";
 import { InstalledPicker } from "@/features/installed/InstalledPicker";
 import { ipc } from "@/lib/ipc";
 import { useEditor } from "@/store/editor";
 
+const EXAMPLE_LAYOUTS = import.meta.glob("../../examples/*.keylayout", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+
+const examples = Object.entries(EXAMPLE_LAYOUTS).map(([path, xml]) => ({
+  name: path.split("/").pop()?.replace(/\.keylayout$/, "") ?? path,
+  xml,
+}));
+
 export function WelcomePage() {
   const { t } = useTranslation();
   const newDocument = useEditor((s) => s.newDocument);
+  const importXml = useEditor((s) => s.importXml);
   const openFile = useEditor((s) => s.openFile);
   const openInstalled = useEditor((s) => s.openInstalled);
   const recents = useEditor((s) => s.recents);
   const clearRecents = useEditor((s) => s.clearRecents);
   const [showInstalled, setShowInstalled] = React.useState(false);
+  const [showWizard, setShowWizard] = React.useState(false);
+  const [exampleQuery, setExampleQuery] = React.useState("");
+  const filteredExamples = examples.filter((example) =>
+    example.name.toLowerCase().includes(exampleQuery.toLowerCase()),
+  );
 
   const tiles: Array<{ icon: React.ReactNode; title: string; desc: string; onClick: () => void }> = [
     {
@@ -34,16 +51,20 @@ export function WelcomePage() {
       desc: t("template.basic.desc"),
       onClick: () => void newDocument("basic", t("tabs.untitled")),
     },
-    {
-      icon: <MonitorCog size={20} />,
-      title: t("template.fromSystem"),
-      desc: t("template.fromSystem.desc"),
-      onClick: () => setShowInstalled(true),
-    },
+    ...(ipc.isTauri
+      ? [
+          {
+            icon: <MonitorCog size={20} />,
+            title: t("template.fromSystem"),
+            desc: t("template.fromSystem.desc"),
+            onClick: () => setShowInstalled(true),
+          },
+        ]
+      : []),
   ];
 
   return (
-    <div className="mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-8 text-center">
+    <div className="mx-auto flex min-h-full max-w-4xl flex-col items-center justify-center gap-8 text-center">
       <div className="space-y-3" style={{ color: "var(--text)" }}>
         <div className="km-float mx-auto w-fit">
           <Logo size={84} />
@@ -55,15 +76,15 @@ export function WelcomePage() {
 
       <div data-tour="welcome-tiles" className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
         {tiles.map((tile) => (
-          <Card
+          <ActionCard
             key={tile.title}
-            className="cursor-pointer p-5 text-left transition-colors hover:border-[var(--accent)]"
+            className="p-5"
             onClick={tile.onClick}
           >
             <div className="mb-2 text-[var(--accent)]">{tile.icon}</div>
             <h3 className="font-semibold">{tile.title}</h3>
             <p className="mt-1 text-sm text-[var(--text-muted)]">{tile.desc}</p>
-          </Card>
+          </ActionCard>
         ))}
       </div>
 
@@ -72,7 +93,68 @@ export function WelcomePage() {
           <FolderOpen size={16} />
           {t("action.open")}
         </Button>
+        <Button variant="outline" onClick={() => setShowWizard((open) => !open)}>
+          <Wand2 size={16} />
+          {t("wizard.title")}
+        </Button>
       </div>
+
+      {showWizard && (
+        <Card className="w-full p-4 text-left">
+          <h2 className="font-display text-lg font-semibold">{t("wizard.title")}</h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">{t("wizard.help")}</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <ActionCard className="p-4" onClick={() => void newDocument("standard", t("wizard.tweakUs.name"))}>
+              <h3 className="font-semibold">{t("wizard.tweakUs")}</h3>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">{t("wizard.tweakUs.desc")}</p>
+            </ActionCard>
+            <ActionCard className="p-4" onClick={() => void newDocument("basic", t("wizard.accents.name"))}>
+              <h3 className="font-semibold">{t("wizard.accents")}</h3>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">{t("wizard.accents.desc")}</p>
+            </ActionCard>
+            <ActionCard className="p-4" onClick={() => void importXml(examples[0]?.xml ?? "")}>
+              <h3 className="font-semibold">{t("wizard.phonetic")}</h3>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">{t("wizard.phonetic.desc")}</p>
+            </ActionCard>
+            <ActionCard className="p-4" onClick={() => void openFile()}>
+              <h3 className="font-semibold">{t("wizard.repair")}</h3>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">{t("wizard.repair.desc")}</p>
+            </ActionCard>
+          </div>
+        </Card>
+      )}
+
+      {examples.length > 0 && (
+        <Card className="w-full p-4 text-left">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-display text-lg font-semibold">{t("examples.title")}</h2>
+              <p className="text-sm text-[var(--text-muted)]">{t("examples.help")}</p>
+            </div>
+            <Input
+              value={exampleQuery}
+              onChange={(e) => setExampleQuery(e.target.value)}
+              placeholder={t("examples.search")}
+              className="h-8 w-52"
+            />
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {filteredExamples.map((example) => (
+              <ActionCard
+                key={example.name}
+                className="p-3"
+                onClick={() => void importXml(example.xml)}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText size={15} className="text-[var(--accent)]" />
+                  <span className="font-medium">{example.name}</span>
+                </div>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">{t("examples.open")}</p>
+              </ActionCard>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {recents.length > 0 && (
         <div className="w-full max-w-md text-left">

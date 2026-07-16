@@ -2,7 +2,7 @@
 //! frontend-facing [`KeyboardSnapshot`] builder (.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use crate::model::*;
 use crate::modifiers::{resolve_map_index, ModMask};
@@ -37,6 +37,11 @@ pub struct KeyboardSnapshot {
     /// True when the requested mask was actually covered by a select (else the
     /// default index was used).
     pub mask_covered: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SnapshotOptions {
+    pub include_existing_high_codes: bool,
 }
 
 /// Resolve a key value following base-map inheritance. Returns the value and
@@ -80,6 +85,22 @@ pub fn build_snapshot(
     mask: ModMask,
     dead_state: &str,
 ) -> KeyboardSnapshot {
+    build_snapshot_with_options(
+        kb,
+        keyboard_type_code,
+        mask,
+        dead_state,
+        SnapshotOptions::default(),
+    )
+}
+
+pub fn build_snapshot_with_options(
+    kb: &Keyboard,
+    keyboard_type_code: u32,
+    mask: ModMask,
+    dead_state: &str,
+    options: SnapshotOptions,
+) -> KeyboardSnapshot {
     let layout = kb
         .layout_for_type(keyboard_type_code)
         .or_else(|| kb.layouts.first());
@@ -103,8 +124,9 @@ pub fn build_snapshot(
         None => (0, false),
     };
 
-    let mut keys = Vec::with_capacity(128);
-    for code in 0u16..=127 {
+    let key_codes = snapshot_key_codes(kb, &set_id, options);
+    let mut keys = Vec::with_capacity(key_codes.len());
+    for code in key_codes {
         keys.push(resolve_key_view(
             kb,
             &set_id,
@@ -132,6 +154,22 @@ pub fn build_snapshot(
         dead_states: kb.states().into_iter().collect(),
         mask_covered,
     }
+}
+
+fn snapshot_key_codes(kb: &Keyboard, set_id: &str, options: SnapshotOptions) -> Vec<u16> {
+    let mut codes: BTreeSet<u16> = (0u16..=127).collect();
+    if options.include_existing_high_codes {
+        if let Some(set) = kb.keymap_set(set_id) {
+            for map in &set.maps {
+                for key in &map.keys {
+                    if key.code > 127 {
+                        codes.insert(key.code);
+                    }
+                }
+            }
+        }
+    }
+    codes.into_iter().collect()
 }
 
 fn resolve_key_view(
@@ -289,5 +327,33 @@ mod tests {
         });
         // code 9 defined nowhere → recursion must terminate, return None
         assert!(resolve_key_value(&kb, "ANSI", 0, 9).is_none());
+    }
+
+    #[test]
+    fn snapshot_can_include_existing_high_key_codes() {
+        let mut kb = parse_keylayout(SAMPLE).unwrap();
+        kb.keymap_set_mut("ANSI")
+            .unwrap()
+            .map_mut(0)
+            .unwrap()
+            .set_key(Key {
+                code: 200,
+                value: KeyValue::Output("Ω".into()),
+            });
+
+        let normal = build_snapshot(&kb, 0, ModMask::empty(), "none");
+        assert!(normal.keys.iter().all(|k| k.code <= 127));
+
+        let high = build_snapshot_with_options(
+            &kb,
+            0,
+            ModMask::empty(),
+            "none",
+            SnapshotOptions {
+                include_existing_high_codes: true,
+            },
+        );
+        let key = high.keys.iter().find(|k| k.code == 200).unwrap();
+        assert_eq!(key.output.as_deref(), Some("Ω"));
     }
 }

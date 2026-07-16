@@ -90,7 +90,9 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: keymano_cloudflared
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
     logging: *default-logging
     # Wait until the web container passes its healthcheck before bringing the
     # tunnel up, so the public hostname never serves a boot-time 502 while nginx

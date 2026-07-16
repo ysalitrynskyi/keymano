@@ -19,6 +19,8 @@ ADMIN_NOTES.md
 
 # Test coverage (generated)
 coverage/
+test-results/
+playwright-report/
 
 # Local agent / editor helpers
 .claude/

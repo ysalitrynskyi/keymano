@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { Badge, Button, Card, Input } from "@/components/ui";
 import { ipc } from "@/lib/ipc";
-import type { ActionsView } from "@/lib/types";
+import type { ActionsView, DeadKeyGraph } from "@/lib/types";
 import { useEditor } from "@/store/editor";
 
 export function DeadKeysPage() {
@@ -17,14 +17,21 @@ export function DeadKeysPage() {
   const refreshSnapshot = useEditor((s) => s.refreshSnapshot);
   const refreshDocs = useEditor((s) => s.refreshDocs);
   const refreshIssues = useEditor((s) => s.refreshIssues);
+  const selectedCode = useEditor((s) => s.selectedCode);
+  const makeKeyDead = useEditor((s) => s.makeKeyDead);
   const [view, setView] = React.useState<ActionsView | null>(null);
+  const [graph, setGraph] = React.useState<DeadKeyGraph | null>(null);
+  const [recipeState, setRecipeState] = React.useState("acute");
+  const [recipeTerminator, setRecipeTerminator] = React.useState("´");
 
   const reload = React.useCallback(async () => {
     if (activeDocId == null) return;
     try {
       setView(await ipc.actionsView(activeDocId, kbIndex));
+      setGraph(await ipc.deadKeyGraph(activeDocId, kbIndex));
     } catch {
       setView(null);
+      setGraph(null);
     }
   }, [activeDocId, kbIndex]);
 
@@ -82,6 +89,38 @@ export function DeadKeysPage() {
       </div>
 
       <p className="-mt-3 text-sm text-[var(--text-muted)]">{t("deadkeys.intro")}</p>
+
+      <Card className="space-y-3 p-4 text-sm">
+        <div>
+          <h3 className="font-semibold">{t("deadkeys.recipe.title")}</h3>
+          <p className="text-xs text-[var(--text-muted)]">{t("deadkeys.recipe.help")}</p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <Input
+            value={recipeState}
+            onChange={(e) => setRecipeState(e.target.value)}
+            aria-label={t("deadkeys.recipe.state")}
+            placeholder={t("deadkeys.recipe.state")}
+          />
+          <Input
+            value={recipeTerminator}
+            onChange={(e) => setRecipeTerminator(e.target.value)}
+            aria-label={t("deadkeys.recipe.terminator")}
+            placeholder={t("deadkeys.recipe.terminator")}
+          />
+          <Button
+            variant="accent"
+            disabled={selectedCode == null}
+            onClick={async () => {
+              if (selectedCode == null) return;
+              await makeKeyDead(selectedCode, recipeState.trim() || "accent", recipeTerminator);
+              await afterEdit();
+            }}
+          >
+            {t("deadkeys.recipe.create")}
+          </Button>
+        </div>
+      </Card>
 
       <div>
         <h3 className="mb-2 text-sm font-semibold">{t("deadkeys.states")}</h3>
@@ -147,6 +186,60 @@ export function DeadKeysPage() {
           </div>
         )}
       </div>
+
+      {graph && (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold">{t("deadkeys.graph.title")}</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Card className="p-3">
+              <div className="mb-2 text-xs font-semibold text-[var(--text-muted)]">
+                {t("deadkeys.graph.edges")}
+              </div>
+              <ul className="space-y-1 text-xs">
+                {graph.edges.length === 0 ? (
+                  <li className="text-[var(--text-muted)]">{t("deadkeys.noActions")}</li>
+                ) : (
+                  graph.edges.map((edge, i) => (
+                    <li key={i} className="rounded border border-[var(--border)] p-2">
+                      <span className="font-mono">{edge.from_state}</span>
+                      <span> → </span>
+                      <span className="font-mono">{edge.to_state ?? edge.output ?? "∅"}</span>
+                      <div className="mt-1 text-[var(--text-muted)]">
+                        {edge.action_id} · {edge.key_codes.join(", ") || "—"}
+                      </div>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </Card>
+            <Card className="p-3">
+              <div className="mb-2 text-xs font-semibold text-[var(--text-muted)]">
+                {t("deadkeys.graph.terminators")}
+              </div>
+              <ul className="space-y-1 text-xs">
+                {graph.terminators.map((term) => (
+                  <li key={term.state} className="flex justify-between rounded border border-[var(--border)] p-2">
+                    <span className="font-mono">{term.state}</span>
+                    <span>{term.output ?? "—"}</span>
+                  </li>
+                ))}
+              </ul>
+              {graph.unreachable_states.length > 0 && (
+                <div className="mt-3">
+                  <div className="mb-1 text-xs font-semibold text-[var(--text-muted)]">
+                    {t("deadkeys.graph.unreachable")}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {graph.unreachable_states.map((state) => (
+                      <Badge key={state} tone="warning">{state}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

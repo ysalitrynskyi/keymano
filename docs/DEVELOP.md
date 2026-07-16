@@ -54,12 +54,14 @@ browser build always exercises the real core.
 pnpm lint
 pnpm wasm:build && pnpm exec tsc -b                # tsc needs the generated src/wasm types
 pnpm test                                          # vitest (frontend + locale parity)
-cargo test -p keylayout-core -p keymano-session
+pnpm coverage                                      # frontend coverage floor: 60% lines/statements/functions, 45% branches
+pnpm e2e                                           # Playwright Chromium smoke
+cargo test -p keylayout-core -p keymano-session -p keymano-wasm
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
 ```
 
-CI also runs Playwright e2e, coverage gates (core ≥90%, frontend ≥80%), and release builds.
+CI also runs Playwright Chromium e2e, coverage gates (core ≥90%, frontend ≥60%), and release builds.
 
 ## Format work
 

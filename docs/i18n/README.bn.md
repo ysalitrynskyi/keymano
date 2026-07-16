@@ -1,5 +1,7 @@
 # Keymano — macOS কীবোর্ড লেআউট সম্পাদক
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 এটি একটি অনূদিত সারসংক্ষেপ। পূর্ণ ডকুমেন্টেশন ইংরেজিতে আছে: **[README](../../README.md)**।
 
 > 🟢 **GitHub-এ নতুন বা ডেভেলপার নন?** সহজ ইংরেজি **[শুরুর গাইড](../../docs/GETTING_STARTED.md)** পড়ুন।

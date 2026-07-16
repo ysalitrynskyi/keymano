@@ -21,3 +21,8 @@ export function ensureWasm(): Promise<void> {
   }
   return inited;
 }
+
+export function resetWasmSession(): Promise<void> {
+  inited = null;
+  return ensureWasm();
+}

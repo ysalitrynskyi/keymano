@@ -1,5 +1,7 @@
 # Keymano — Trình chỉnh sửa bố cục bàn phím macOS
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 Đây là bản tóm tắt đã được dịch. Tài liệu đầy đủ bằng tiếng Anh: **[README](../../README.md)**.
 
 > 🟢 **Mới dùng GitHub hoặc không phải lập trình viên?** Đọc **[hướng dẫn bắt đầu (tiếng Anh)](../../docs/GETTING_STARTED.md)** dễ hiểu.

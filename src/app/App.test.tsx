@@ -1,15 +1,36 @@
 import { render, screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@/lib/i18n";
 import { useEditor } from "@/store/editor";
+import { resetEditorState } from "@/test/editor";
+import { resetWasmSession } from "@/test/wasm";
 import { App } from "./App";
+
+const toastMock = vi.hoisted(() => {
+  const fn = vi.fn() as unknown as ReturnType<typeof vi.fn> & {
+    success: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    message: ReturnType<typeof vi.fn>;
+  };
+  fn.success = vi.fn();
+  fn.error = vi.fn();
+  fn.message = vi.fn();
+  return fn;
+});
+
+vi.mock("sonner", () => ({ Toaster: () => null, toast: toastMock }));
 
 afterEach(cleanup);
 
 describe("App integration", () => {
-  beforeEach(() => {
-    useEditor.setState({ docs: [], activeDocId: null, snapshot: null });
+  beforeEach(async () => {
+    await resetWasmSession();
+    resetEditorState();
+    toastMock.mockClear();
+    toastMock.success.mockClear();
+    toastMock.error.mockClear();
+    toastMock.message.mockClear();
   });
 
   it("opens Preferences from the gear even with no document", async () => {
@@ -37,6 +58,32 @@ describe("App integration", () => {
     expect(screen.getByLabelText(/key 0: a/)).toBeInTheDocument();
     // status bar shows the valid badge
     expect(screen.getByText("Valid")).toBeInTheDocument();
+  });
+
+  it("exposes welcome templates as semantic buttons", async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getAllByText("Keymano").length).toBeGreaterThan(0));
+
+    expect(await screen.findByRole("button", { name: /Standard \(US\)/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Basic/ })).toBeInTheDocument();
+  });
+
+  it("does not show system-layout entry points in the browser", async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getAllByText("Keymano").length).toBeGreaterThan(0));
+
+    expect(screen.queryByRole("button", { name: "From system…" })).not.toBeInTheDocument();
+    expect(screen.queryByText("From system layout")).not.toBeInTheDocument();
+  });
+
+  it("warns when a browser drop contains an unsupported file", async () => {
+    const { container } = render(<App />);
+    await waitFor(() => expect(screen.getAllByText("Keymano").length).toBeGreaterThan(0));
+
+    const file = new File(["not a keylayout"], "layout.bundle", { type: "application/octet-stream" });
+    fireEvent.drop(container.firstElementChild!, { dataTransfer: { files: [file] } });
+
+    await waitFor(() => expect(toastMock.error).toHaveBeenCalled());
   });
 
   it("navigates to the XML page and shows generated keylayout", async () => {

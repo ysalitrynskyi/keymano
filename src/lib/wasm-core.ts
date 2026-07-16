@@ -11,10 +11,17 @@
 
 import type {
   ActionsView,
+  BundleMetadataPatch,
+  BundleMetadataView,
+  Comments,
+  DeadKeyGraph,
   DocSummary,
   Issue,
   KeyboardSnapshot,
+  LayerMatrix,
   ModifierSelectView,
+  RepairPlan,
+  ValidationReport,
 } from "./types";
 
 // Minimal shape of the wasm-bindgen `Session` we rely on (names are the Rust
@@ -23,18 +30,30 @@ import type {
 interface WasmSession {
   new_document(template: string, name: string): string;
   open_keylayout(xml: string): string;
+  open_bundle_zip(bytes: Uint8Array): string;
   list_documents(): string;
   close_document(id: number): void;
   rename(id: number, kbIndex: number, name: string): string;
   duplicate(id: number): string;
   mark_saved(id: number, path: string): void;
   get_snapshot(id: number, kbIndex: number, type: number, mask: number, dead: string): string;
+  get_snapshot_with_options(id: number, kbIndex: number, type: number, mask: number, dead: string, includeExistingHighCodes: boolean): string;
   get_xml(id: number, kbIndex: number, codeNonAscii: boolean): string;
   validate(id: number, kbIndex: number): string;
+  validation_report(id: number, kbIndex: number): string;
+  repair_plan(id: number, kbIndex: number): string;
+  apply_repair_plan(id: number, kbIndex: number, planJson: string): string;
+  layer_matrix(id: number, kbIndex: number, type: number, includeHighCodes: boolean): string;
+  dead_key_graph(id: number, kbIndex: number): string;
+  comments(id: number, kbIndex: number): string;
+  set_comments(id: number, kbIndex: number, commentsJson: string): void;
+  bundle_metadata(id: number): string;
+  set_bundle_metadata(id: number, patchJson: string): string;
   undo_label(id: number): string | undefined;
   actions_view(id: number, kbIndex: number): string;
   modifier_map_view(id: number, kbIndex: number, type: number): string;
   set_key_output(id: number, kbIndex: number, type: number, mask: number, dead: string, code: number, output: string): string;
+  set_key_output_in_map(id: number, kbIndex: number, setId: string, mapIndex: number, code: number, output: string): void;
   clear_key(id: number, kbIndex: number, type: number, mask: number, dead: string, code: number): string;
   make_key_dead(id: number, kbIndex: number, type: number, mask: number, code: number, next: string, term: string): string;
   swap_keys(id: number, kbIndex: number, type: number, mask: number, dead: string, a: number, b: number): string;
@@ -87,6 +106,9 @@ export class WasmBackend {
   async openKeylayout(xml: string): Promise<DocSummary> {
     return JSON.parse((await this.s()).open_keylayout(xml));
   }
+  async openBundleZip(bytes: Uint8Array): Promise<DocSummary> {
+    return JSON.parse((await this.s()).open_bundle_zip(bytes));
+  }
   async listDocuments(): Promise<DocSummary[]> {
     return JSON.parse((await this.s()).list_documents());
   }
@@ -105,11 +127,41 @@ export class WasmBackend {
   async getSnapshot(id: number, kbIndex: number, type: number, mask: number, dead: string): Promise<KeyboardSnapshot> {
     return JSON.parse((await this.s()).get_snapshot(id, kbIndex, type, mask, dead));
   }
+  async getSnapshotWithOptions(id: number, kbIndex: number, type: number, mask: number, dead: string, includeExistingHighCodes: boolean): Promise<KeyboardSnapshot> {
+    return JSON.parse((await this.s()).get_snapshot_with_options(id, kbIndex, type, mask, dead, includeExistingHighCodes));
+  }
   async getXml(id: number, kbIndex: number, codeNonAscii: boolean): Promise<string> {
     return (await this.s()).get_xml(id, kbIndex, codeNonAscii);
   }
   async validate(id: number, kbIndex: number): Promise<Issue[]> {
     return JSON.parse((await this.s()).validate(id, kbIndex));
+  }
+  async validationReport(id: number, kbIndex: number): Promise<ValidationReport> {
+    return JSON.parse((await this.s()).validation_report(id, kbIndex));
+  }
+  async repairPlan(id: number, kbIndex: number): Promise<RepairPlan> {
+    return JSON.parse((await this.s()).repair_plan(id, kbIndex));
+  }
+  async applyRepairPlan(id: number, kbIndex: number, plan: RepairPlan): Promise<string[]> {
+    return JSON.parse((await this.s()).apply_repair_plan(id, kbIndex, JSON.stringify(plan)));
+  }
+  async layerMatrix(id: number, kbIndex: number, type: number, includeHighCodes: boolean): Promise<LayerMatrix> {
+    return JSON.parse((await this.s()).layer_matrix(id, kbIndex, type, includeHighCodes));
+  }
+  async deadKeyGraph(id: number, kbIndex: number): Promise<DeadKeyGraph> {
+    return JSON.parse((await this.s()).dead_key_graph(id, kbIndex));
+  }
+  async comments(id: number, kbIndex: number): Promise<Comments> {
+    return JSON.parse((await this.s()).comments(id, kbIndex));
+  }
+  async setComments(id: number, kbIndex: number, comments: Comments): Promise<void> {
+    (await this.s()).set_comments(id, kbIndex, JSON.stringify(comments));
+  }
+  async bundleMetadata(id: number): Promise<BundleMetadataView | null> {
+    return JSON.parse((await this.s()).bundle_metadata(id));
+  }
+  async setBundleMetadata(id: number, patch: BundleMetadataPatch): Promise<BundleMetadataView | null> {
+    return JSON.parse((await this.s()).set_bundle_metadata(id, JSON.stringify(patch)));
   }
   async undoLabel(id: number): Promise<string | null> {
     return (await this.s()).undo_label(id) ?? null;
@@ -122,6 +174,9 @@ export class WasmBackend {
   }
   async setKeyOutput(id: number, kbIndex: number, type: number, mask: number, dead: string, code: number, output: string): Promise<KeyboardSnapshot> {
     return JSON.parse((await this.s()).set_key_output(id, kbIndex, type, mask, dead, code, output));
+  }
+  async setKeyOutputInMap(id: number, kbIndex: number, setId: string, mapIndex: number, code: number, output: string): Promise<void> {
+    (await this.s()).set_key_output_in_map(id, kbIndex, setId, mapIndex, code, output);
   }
   async clearKey(id: number, kbIndex: number, type: number, mask: number, dead: string, code: number): Promise<KeyboardSnapshot> {
     return JSON.parse((await this.s()).clear_key(id, kbIndex, type, mask, dead, code));

@@ -153,7 +153,7 @@ runs on macOS, Windows, Linux, and in the browser.
 
 ### Core (Rust)
 - Pure, Tauri-free Rust core (`keylayout-core`): parse / serialize `.keylayout`
-  (comment-preserving), modifier resolution with base-map inheritance, dead-key
+  (header-comment-preserving), modifier resolution with base-map inheritance, dead-key
   state machine, validation + auto-repair, templates, script id ranges,
   special-key injection, and `.bundle` read/write.
 - Parser/bundle hardening: rejects non-UTF-8 element names; decodes `.strings`

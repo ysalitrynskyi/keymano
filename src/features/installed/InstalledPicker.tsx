@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { MonitorCog, FileText, Package, Keyboard as KbIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button, Card } from "@/components/ui";
+import { Button, Dialog } from "@/components/ui";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ipc } from "@/lib/ipc";
 import type { InputSource, InstalledLayout } from "@/lib/types";
@@ -28,18 +28,13 @@ export function InstalledPicker({ onClose }: { onClose: () => void }) {
 
   React.useEffect(() => {
     refresh();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
     // live-refresh when the Keyboard Layouts folders change (fs-watch)
     let unlisten: (() => void) | undefined;
     void ipc.onInstalledChanged(refresh).then((u) => (unlisten = u));
     return () => {
-      window.removeEventListener("keydown", onKey);
       unlisten?.();
     };
-  }, [onClose, refresh]);
+  }, [refresh]);
 
   const uninstall = async (it: InstalledLayout) => {
     try {
@@ -77,14 +72,7 @@ export function InstalledPicker({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("installed.title")}
-    >
-      <Card className="max-h-[74vh] w-[480px] max-w-[calc(100vw-2rem)] overflow-auto p-5" onClick={(e) => e.stopPropagation()}>
+    <Dialog title={t("installed.title")} onClose={onClose} z={50} className="max-h-[74vh] w-[480px] overflow-auto p-5">
         <h2 className="font-display mb-1 flex items-center gap-2 text-lg font-semibold">
           <MonitorCog size={18} />
           {t("installed.title")}
@@ -144,7 +132,7 @@ export function InstalledPicker({ onClose }: { onClose: () => void }) {
             {t("keyeditor.cancel", { ns: "editor" })}
           </Button>
         </div>
-      </Card>
+      
 
       {confirm && (
         <ConfirmDialog
@@ -158,7 +146,7 @@ export function InstalledPicker({ onClose }: { onClose: () => void }) {
           }}
         />
       )}
-    </div>
+    </Dialog>
   );
 }
 

@@ -3,7 +3,7 @@
 
 import { useTranslation } from "react-i18next";
 
-import { Button, Card } from "@/components/ui";
+import { Button, Dialog } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 import { ipc } from "@/lib/ipc";
 import {
@@ -19,14 +19,7 @@ import {
 export function About({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   return (
-    <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${t("about.title")} ${APP_NAME}`}
-    >
-      <Card className="w-[380px] max-w-[calc(100vw-2rem)] p-6 text-center" onClick={(e) => e.stopPropagation()}>
+    <Dialog title={`${t("about.title")} ${APP_NAME}`} onClose={onClose} className="w-[380px] p-6 text-center">
         <div className="mx-auto mb-3 w-fit" style={{ color: "var(--text)" }}>
           <Logo size={88} />
         </div>
@@ -59,8 +52,7 @@ export function About({ onClose }: { onClose: () => void }) {
             {t("action.close")}
           </Button>
         </div>
-      </Card>
-    </div>
+    </Dialog>
   );
 }
 

@@ -1,9 +1,8 @@
 // P8 Preferences — app-level settings (not per-layout), shown as a modal.
 
-import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, Card, Segmented } from "@/components/ui";
+import { Button, Dialog, Segmented } from "@/components/ui";
 import { SUPPORTED_LANGUAGES } from "@/lib/i18n";
 import { ipc } from "@/lib/ipc";
 import { APP_NAME, APP_VERSION, AUTHOR, AUTHOR_MAILTO, CONTACT_EMAIL, GITHUB_URL } from "@/lib/meta";
@@ -13,21 +12,8 @@ export function PreferencesModal({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme, font, setFont } = useTheme();
 
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("nav.prefs")}
-    >
-      <Card className="w-[440px] max-w-[calc(100vw-2rem)] p-5" onClick={(e) => e.stopPropagation()}>
+    <Dialog title={t("nav.prefs")} onClose={onClose} className="w-[440px] p-5">
         <h2 className="font-display mb-4 text-xl font-semibold">{t("nav.prefs")}</h2>
 
         <div className="space-y-4">
@@ -100,7 +86,6 @@ export function PreferencesModal({ onClose }: { onClose: () => void }) {
             {t("action.close")}
           </Button>
         </div>
-      </Card>
-    </div>
+    </Dialog>
   );
 }

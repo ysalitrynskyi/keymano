@@ -1,5 +1,7 @@
 # Keymano — macOS Klavye Düzeni Düzenleyicisi
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 Bu, çevrilmiş bir özet. Tam belgeler İngilizce: **[README](../../README.md)**.
 
 > 🟢 **GitHub'da yeni misiniz veya geliştirici değil misiniz?** Sade İngilizce **[başlangıç kılavuzu](../../docs/GETTING_STARTED.md)** okuyun.

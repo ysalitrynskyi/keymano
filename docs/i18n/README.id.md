@@ -1,5 +1,7 @@
 # Keymano — Editor Tata Letak Keyboard macOS
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 Ini adalah ringkasan terjemahan. Dokumentasi lengkap tersedia dalam bahasa Inggris: **[README](../../README.md)**.
 
 > 🟢 **Baru di GitHub atau bukan pengembang?** Baca **[panduan memulai (Bahasa Inggris)](../../docs/GETTING_STARTED.md)** yang mudah dipahami.

@@ -45,10 +45,17 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    exclude: ["node_modules/**", "dist/**", "target/**", "e2e/**"],
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/main.tsx"],
+      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/main.tsx", "src/wasm/**"],
+      thresholds: {
+        branches: 45,
+        functions: 60,
+        lines: 60,
+        statements: 59,
+      },
     },
   },
 });

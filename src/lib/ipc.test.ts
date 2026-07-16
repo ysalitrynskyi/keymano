@@ -1,8 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { stubBrowserDownload } from "@/test/download";
+import { resetWasmSession } from "@/test/wasm";
 import { ipc } from "./ipc";
 
 describe("ipc web backend", () => {
+  beforeEach(async () => {
+    await resetWasmSession();
+  });
+
   it("reports non-tauri runtime", async () => {
     expect(ipc.isTauri).toBe(false);
     expect(await ipc.ping()).toBe("pong");
@@ -18,19 +24,10 @@ describe("ipc web backend", () => {
     expect(await ipc.listInputSources()).toEqual([]);
   });
 
-  it("opens a doc by path, renames + duplicates it", async () => {
-    const opened = await ipc.openPath("/System/Russian-PC.keylayout");
-    expect(opened.name).toBe("Russian-PC");
-
-    const renamed = await ipc.renameDocument(opened.id, 0, "My Russian");
-    expect(renamed.name).toBe("My Russian");
-
-    const dup = await ipc.duplicateDocument(opened.id);
-    expect(dup.id).not.toBe(opened.id);
-    expect(dup.name).toBe("My Russian copy");
-
-    const docs = await ipc.listDocuments();
-    expect(docs.find((d) => d.id === dup.id)).toBeTruthy();
+  it("rejects openPath in the browser instead of inventing a fake document", async () => {
+    await expect(ipc.openPath("/System/Russian-PC.keylayout")).rejects.toThrow(
+      /cannot reopen filesystem paths/i,
+    );
   });
 
   it("openContent parses the real layout name; rejects unparseable input", async () => {
@@ -45,18 +42,13 @@ describe("ipc web backend", () => {
 
   it("saveFileDialog downloads a real .keylayout in the browser", async () => {
     const doc = await ipc.newDocument("standard", "DL");
-    const createObjectURL = vi.fn(() => "blob:fake");
-    const revokeObjectURL = vi.fn();
-    // jsdom lacks the blob URL API — stub it for the download path.
-    (URL as unknown as { createObjectURL: unknown }).createObjectURL = createObjectURL;
-    (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = revokeObjectURL;
-    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    const download = stubBrowserDownload();
     const ok = await ipc.saveFileDialog(doc.id, 0, "DL");
     expect(ok).toBe(true);
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(click).toHaveBeenCalledOnce();
-    expect(revokeObjectURL).toHaveBeenCalledOnce();
-    click.mockRestore();
+    expect(download.createObjectURL).toHaveBeenCalledOnce();
+    expect(download.click).toHaveBeenCalledOnce();
+    expect(download.revokeObjectURL).toHaveBeenCalledOnce();
+    download.restore();
   });
 
   it("exportBundleDialog downloads a .bundle.zip in the browser (v0.2.2)", async () => {
@@ -64,24 +56,19 @@ describe("ipc web backend", () => {
     // fix: a real Blob download with the .bundle.zip filename ends up on the
     // anchor element + the URL is revoked after click.
     const doc = await ipc.newDocument("standard", "MyLayout");
-    const createObjectURL = vi.fn(() => "blob:fake");
-    const revokeObjectURL = vi.fn();
-    (URL as unknown as { createObjectURL: unknown }).createObjectURL = createObjectURL;
-    (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = revokeObjectURL;
+    const download = stubBrowserDownload();
     let downloadAttr = "";
-    const click = vi
-      .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(function (this: HTMLAnchorElement) {
-        downloadAttr = this.download;
-      });
+    download.click.mockImplementation(function (this: HTMLAnchorElement) {
+      downloadAttr = this.download;
+    });
     const ok = await ipc.exportBundleDialog(doc.id, 0, "MyLayout");
     expect(ok).toBe(true);
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(click).toHaveBeenCalledOnce();
-    expect(revokeObjectURL).toHaveBeenCalledOnce();
+    expect(download.createObjectURL).toHaveBeenCalledOnce();
+    expect(download.click).toHaveBeenCalledOnce();
+    expect(download.revokeObjectURL).toHaveBeenCalledOnce();
     expect(downloadAttr).toMatch(/\.bundle\.zip$/);
     expect(downloadAttr).toContain("MyLayout");
-    click.mockRestore();
+    download.restore();
   });
 
   it("installLayout (web) routes a standalone doc to the .keylayout path", async () => {

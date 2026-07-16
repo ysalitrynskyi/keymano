@@ -4,12 +4,14 @@
 // can't write directories, so the web build downloads it as a zip the user
 // unzips back into a real `.bundle` (handled in `ipc.exportBundleDialog`).
 
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Package, Wand2 } from "lucide-react";
 
 import { Badge, Button, Card, Input } from "@/components/ui";
 import { ipc } from "@/lib/ipc";
 import { sanitizeStem } from "@/lib/sanitize-stem";
+import type { BundleMetadataView } from "@/lib/types";
 import { useEditor } from "@/store/editor";
 
 export function BundlePage() {
@@ -20,6 +22,11 @@ export function BundlePage() {
   const renameDoc = useEditor((s) => s.renameDoc);
   const generateName = useEditor((s) => s.generateName);
   const doc = docs.find((d) => d.id === activeDocId);
+  const [metadata, setMetadata] = React.useState<BundleMetadataView | null>(null);
+  React.useEffect(() => {
+    if (activeDocId == null) return;
+    void ipc.bundleMetadata(activeDocId).then(setMetadata).catch(() => setMetadata(null));
+  }, [activeDocId, doc?.dirty]);
   if (!doc) return null;
   const web = !ipc.isTauri;
 
@@ -32,6 +39,11 @@ export function BundlePage() {
   const idSlug = doc.name.replace(/[^A-Za-z0-9-]/g, "-").replace(/^-+|-+$/g, "") || "layout";
   const identifier = `app.keymano.layouts.${idSlug}`;
   const bundleStem = sanitizeStem(doc.name);
+  const setMeta = async (patch: Parameters<typeof ipc.setBundleMetadata>[1]) => {
+    if (activeDocId == null) return;
+    const next = await ipc.setBundleMetadata(activeDocId, patch);
+    setMetadata(next);
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-4" data-tour="tour-page">
@@ -88,6 +100,39 @@ export function BundlePage() {
         </div>
       </Card>
 
+      <Card className="space-y-3 p-4 text-sm">
+        <div>
+          <h3 className="font-semibold">{t("bundle.studio.title")}</h3>
+          <p className="text-xs text-[var(--text-muted)]">{t("bundle.studio.help")}</p>
+        </div>
+        {metadata ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MetaInput
+              label={t("bundle.identifier")}
+              value={metadata.identifier}
+              onCommit={(identifier) => setMeta({ identifier })}
+            />
+            <MetaInput
+              label={t("bundle.version")}
+              value={metadata.version}
+              onCommit={(version) => setMeta({ version })}
+            />
+            <MetaInput
+              label={t("bundle.buildVersion")}
+              value={metadata.build_version ?? ""}
+              onCommit={(build_version) => setMeta({ build_version })}
+            />
+            <MetaInput
+              label={t("bundle.projectName")}
+              value={metadata.project_name ?? ""}
+              onCommit={(project_name) => setMeta({ project_name })}
+            />
+          </div>
+        ) : (
+          <p className="text-xs text-[var(--text-muted)]">{t("bundle.studio.standalone")}</p>
+        )}
+      </Card>
+
       <div>
         <h3 className="mb-2 text-sm font-semibold">{t("bundle.layouts")}</h3>
         <ul className="space-y-1.5">
@@ -133,5 +178,32 @@ export function BundlePage() {
         )}
       </Card>
     </div>
+  );
+}
+
+function MetaInput({
+  label,
+  value,
+  onCommit,
+}: {
+  label: string;
+  value: string;
+  onCommit: (value: string) => void;
+}) {
+  return (
+    <label className="space-y-1">
+      <span className="text-xs font-medium text-[var(--text-muted)]">{label}</span>
+      <Input
+        key={value}
+        defaultValue={value}
+        className="h-8"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        }}
+        onBlur={(e) => {
+          if (e.target.value !== value) onCommit(e.target.value);
+        }}
+      />
+    </label>
   );
 }

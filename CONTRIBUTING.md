@@ -39,7 +39,9 @@ pnpm tauri dev    # full desktop app (needs Rust + a system WebView)
 pnpm lint                                          # eslint
 pnpm wasm:build && pnpm exec tsc -b               # tsc needs generated src/wasm types
 pnpm test                                          # frontend (vitest)
-cargo test -p keylayout-core -p keymano-session    # Rust
+pnpm coverage                                      # frontend coverage floor
+pnpm e2e                                           # Playwright Chromium smoke
+cargo test -p keylayout-core -p keymano-session -p keymano-wasm  # Rust
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
 ```

@@ -1,9 +1,8 @@
 // Small confirm modal used for destructive/irreversible prompts.
 
-import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, Card } from "@/components/ui";
+import { Button, Dialog } from "@/components/ui";
 
 export function ConfirmDialog({
   title,
@@ -22,40 +21,24 @@ export function ConfirmDialog({
 }) {
   const { t } = useTranslation();
   const cancelText = cancelLabel ?? t("action.cancel");
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-      if (e.key === "Enter") onConfirm();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel, onConfirm]);
 
   return (
-    <div
-      className="fixed inset-0 z-[95] flex items-center justify-center bg-black/45 p-4"
-      onClick={onCancel}
-      role="alertdialog"
-      aria-modal="true"
-      aria-label={title}
-    >
-      <Card className="w-[360px] max-w-[calc(100vw-2rem)] p-5" onClick={(e) => e.stopPropagation()}>
-        <h2 className="font-display text-lg font-semibold">{title}</h2>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">{message}</p>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onCancel} autoFocus>
-            {cancelText}
-          </Button>
-          <Button
-            variant="accent"
-            size="sm"
-            onClick={onConfirm}
-            style={{ background: "#c0392b", borderColor: "transparent", color: "#fff" }}
-          >
-            {confirmLabel}
-          </Button>
-        </div>
-      </Card>
-    </div>
+    <Dialog title={title} onClose={onCancel} role="alertdialog" z={95} className="w-[360px] p-5">
+      <h2 className="font-display text-lg font-semibold">{title}</h2>
+      <p className="mt-2 text-sm text-[var(--text-muted)]">{message}</p>
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={onCancel} autoFocus>
+          {cancelText}
+        </Button>
+        <Button
+          variant="accent"
+          size="sm"
+          onClick={onConfirm}
+          className="border-transparent bg-[var(--danger,#c0392b)] text-[var(--danger-fg,#fff)] hover:opacity-90"
+        >
+          {confirmLabel}
+        </Button>
+      </div>
+    </Dialog>
   );
 }

@@ -385,6 +385,116 @@ pub fn read_bundle(dir: &Path) -> Result<KeyboardBundle> {
 /// Forward slashes keep the same value usable on both disk and zip archives.
 pub type BundleFile = (String, Vec<u8>);
 
+/// Build a [`KeyboardBundle`] from an in-memory bundle file list, inverse of
+/// [`bundle_to_files`]. Accepts either `Contents/...` relative paths or a single
+/// `<Name>.bundle/Contents/...` prefix as produced by browser zip export.
+pub fn bundle_from_files(files: Vec<BundleFile>) -> Result<KeyboardBundle> {
+    let mut seen = std::collections::BTreeSet::new();
+    let mut prefixes = std::collections::BTreeSet::new();
+    let mut normalized = Vec::new();
+    for (path, bytes) in files {
+        let clean = normalize_bundle_path(&path)?;
+        if !seen.insert(clean.clone()) {
+            return Err(CoreError::Bundle(format!(
+                "duplicate bundle entry '{clean}'"
+            )));
+        }
+        let stripped = if let Some(rest) = clean.split_once(".bundle/").map(|(_, rest)| rest) {
+            let prefix = clean
+                .split_once(".bundle/")
+                .map(|(prefix, _)| format!("{prefix}.bundle"))
+                .unwrap();
+            prefixes.insert(prefix);
+            rest.to_string()
+        } else {
+            clean
+        };
+        normalized.push((stripped, bytes));
+    }
+    if prefixes.len() > 1 {
+        return Err(CoreError::Bundle(
+            "ambiguous archive contains multiple .bundle roots".into(),
+        ));
+    }
+
+    let info_bytes = normalized
+        .iter()
+        .find(|(path, _)| path == "Contents/Info.plist")
+        .map(|(_, bytes)| bytes.as_slice())
+        .ok_or_else(|| CoreError::Bundle("missing Contents/Info.plist".into()))?;
+    let info = parse_info_plist(info_bytes)?;
+    let mut layouts = Vec::new();
+    let mut localizations = Vec::new();
+    let mut icons: BTreeMap<String, Vec<u8>> = BTreeMap::new();
+
+    for (path, bytes) in &normalized {
+        if let Some(stem) = path
+            .strip_prefix("Contents/Resources/")
+            .and_then(|p| p.strip_suffix(".icns"))
+        {
+            icons.insert(stem.to_string(), bytes.clone());
+        }
+    }
+
+    for (path, bytes) in normalized {
+        if let Some(stem) = path
+            .strip_prefix("Contents/Resources/")
+            .and_then(|p| p.strip_suffix(".keylayout"))
+        {
+            let xml = String::from_utf8(bytes)
+                .map_err(|e| CoreError::Bundle(format!("keylayout is not UTF-8: {e}")))?;
+            layouts.push(BundledLayout {
+                file_stem: stem.to_string(),
+                keyboard: parse_keylayout(&xml)?,
+                icon: icons.remove(stem),
+                intended_language: None,
+                does_caps_lock_switching: false,
+            });
+        } else if let Some(locale) = path
+            .strip_prefix("Contents/Resources/")
+            .and_then(|p| p.strip_suffix(".lproj/InfoPlist.strings"))
+        {
+            let body = decode_strings_bytes(&bytes);
+            localizations.push(Localization {
+                locale: locale.to_string(),
+                names: parse_strings(&body),
+            });
+        }
+    }
+    layouts.sort_by(|a, b| a.file_stem.cmp(&b.file_stem));
+    localizations.sort_by(|a, b| a.locale.cmp(&b.locale));
+    if layouts.is_empty() {
+        return Err(CoreError::Bundle(
+            "bundle contains no .keylayout files".into(),
+        ));
+    }
+    Ok(KeyboardBundle {
+        identifier: info.identifier,
+        name: info.name,
+        version: info.version,
+        build_version: info.build_version,
+        project_name: info.project_name,
+        source_version: info.source_version,
+        layouts,
+        localizations,
+        extra_plist: info.extra_plist,
+    })
+}
+
+fn normalize_bundle_path(path: &str) -> Result<String> {
+    if path.starts_with('/') || path.starts_with('\\') || path.contains('\\') {
+        return Err(CoreError::Bundle(format!("unsafe bundle path '{path}'")));
+    }
+    let parts: Vec<&str> = path.split('/').collect();
+    if parts
+        .iter()
+        .any(|part| part.is_empty() || *part == "." || *part == "..")
+    {
+        return Err(CoreError::Bundle(format!("unsafe bundle path '{path}'")));
+    }
+    Ok(parts.join("/"))
+}
+
 /// Compose a bundle's directory layout into pairs of (relative path, bytes).
 ///
 /// Paths use forward slashes (portable across OS + ready for zip archives).
@@ -662,5 +772,47 @@ mod tests {
         for p in &paths {
             assert!(!p.contains('\\'), "backslash in {p}");
         }
+    }
+
+    #[test]
+    fn bundle_from_files_round_trips_bundle_to_files() {
+        let bundle = KeyboardBundle::from_keyboard(new_keyboard(Template::Basic, "MyLayout"));
+        let files = bundle_to_files(&bundle, &EncodeOpts::default()).unwrap();
+
+        let imported = bundle_from_files(files).unwrap();
+
+        assert_eq!(imported.identifier, bundle.identifier);
+        assert_eq!(imported.layouts.len(), 1);
+        assert_eq!(imported.layouts[0].keyboard.name, "MyLayout");
+    }
+
+    #[test]
+    fn bundle_from_files_rejects_traversal_duplicates_and_missing_info() {
+        let bundle = KeyboardBundle::from_keyboard(new_keyboard(Template::Basic, "MyLayout"));
+        let files = bundle_to_files(&bundle, &EncodeOpts::default()).unwrap();
+        let mut duplicate = files.clone();
+        duplicate.push(files[0].clone());
+        assert!(bundle_from_files(duplicate).is_err());
+
+        assert!(bundle_from_files(vec![("../evil".into(), vec![])]).is_err());
+        assert!(bundle_from_files(vec![(
+            "Contents/Resources/X.keylayout".into(),
+            b"<keyboard/>".to_vec()
+        )])
+        .is_err());
+    }
+
+    #[test]
+    fn bundle_from_files_accepts_single_bundle_root_prefix() {
+        let bundle = KeyboardBundle::from_keyboard(new_keyboard(Template::Basic, "MyLayout"));
+        let files = bundle_to_files(&bundle, &EncodeOpts::default())
+            .unwrap()
+            .into_iter()
+            .map(|(path, bytes)| (format!("MyLayout.bundle/{path}"), bytes))
+            .collect();
+
+        let imported = bundle_from_files(files).unwrap();
+
+        assert_eq!(imported.name, bundle.name);
     }
 }

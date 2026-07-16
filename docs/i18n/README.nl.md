@@ -1,5 +1,7 @@
 # Keymano — macOS Toetsenbordindelingseditor
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 Dit is een vertaalde samenvatting. De volledige documentatie is in het Engels: **[README](../../README.md)**.
 
 > 🟢 **Nieuw op GitHub of geen ontwikkelaar?** Lees de eenvoudige **[startgids (Engels)](../../docs/GETTING_STARTED.md)**.

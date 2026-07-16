@@ -4,7 +4,7 @@
 FROM rust:1-bookworm
 
 WORKDIR /app
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 
 # Strip the Tauri shell member so no WebKit is needed inside the container.

@@ -1,5 +1,7 @@
 # Keymano — macOS کی بورڈ لےآؤٹ ایڈیٹر
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 یہ ایک ترجمہ شدہ خلاصہ ہے۔ مکمل دستاویزات انگریزی میں ہیں: **[README](../../README.md)**۔
 
 > 🟢 **GitHub پر نئے ہیں یا ڈویلپر نہیں؟** آسان انگریزی **[شروع کی گائیڈ](../../docs/GETTING_STARTED.md)** پڑھیں۔

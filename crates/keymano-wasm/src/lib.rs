@@ -10,12 +10,12 @@
 //! the hand-written TS types); scalars are returned directly. Errors surface as
 //! a `JsValue` string so the TS layer can treat them like any thrown `Error`.
 
-use std::io::{Cursor, Write};
+use std::io::{Cursor, Read, Write};
 use std::path::PathBuf;
 
-use keylayout_core::bundle::sanitize_stem;
-use keylayout_core::Template;
-use keymano_session::AppState;
+use keylayout_core::bundle::{sanitize_stem, BundleFile};
+use keylayout_core::{Comments, RepairPlan, SnapshotOptions, Template};
+use keymano_session::{AppState, BundleMetadataPatch};
 use wasm_bindgen::prelude::*;
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 
@@ -25,6 +25,25 @@ fn js_err<E: std::fmt::Display>(e: E) -> JsValue {
 
 fn to_json<T: serde::Serialize>(value: &T) -> Result<String, JsValue> {
     serde_json::to_string(value).map_err(js_err)
+}
+
+fn from_json<T: serde::de::DeserializeOwned>(json: &str) -> Result<T, JsValue> {
+    serde_json::from_str(json).map_err(js_err)
+}
+
+fn zip_to_bundle_files(bytes: &[u8]) -> Result<Vec<BundleFile>, String> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| e.to_string())?;
+    let mut files = Vec::new();
+    for index in 0..archive.len() {
+        let mut file = archive.by_index(index).map_err(|e| e.to_string())?;
+        if file.is_dir() {
+            continue;
+        }
+        let mut body = Vec::new();
+        file.read_to_end(&mut body).map_err(|e| e.to_string())?;
+        files.push((file.name().to_string(), body));
+    }
+    Ok(files)
 }
 
 /// One in-memory editing session: all open documents + undo/redo.
@@ -61,6 +80,11 @@ impl Session {
     /// can hand us — there is no filesystem path).
     pub fn open_keylayout(&mut self, xml: &str) -> Result<String, JsValue> {
         to_json(&self.0.open_keylayout_str(xml, None).map_err(js_err)?)
+    }
+
+    pub fn open_bundle_zip(&mut self, bytes: &[u8]) -> Result<String, JsValue> {
+        let files = zip_to_bundle_files(bytes).map_err(js_err)?;
+        to_json(&self.0.open_bundle_files(files, None).map_err(js_err)?)
     }
 
     pub fn list_documents(&self) -> Result<String, JsValue> {
@@ -103,6 +127,32 @@ impl Session {
         )
     }
 
+    pub fn get_snapshot_with_options(
+        &self,
+        id: u32,
+        kb_index: usize,
+        type_code: u32,
+        mask: u16,
+        dead_state: &str,
+        include_existing_high_codes: bool,
+    ) -> Result<String, JsValue> {
+        to_json(
+            &self
+                .0
+                .get_snapshot_with_options(
+                    id,
+                    kb_index,
+                    type_code,
+                    mask,
+                    dead_state,
+                    SnapshotOptions {
+                        include_existing_high_codes,
+                    },
+                )
+                .map_err(js_err)?,
+        )
+    }
+
     pub fn get_xml(
         &self,
         id: u32,
@@ -114,6 +164,71 @@ impl Session {
 
     pub fn validate(&self, id: u32, kb_index: usize) -> Result<String, JsValue> {
         to_json(&self.0.validate(id, kb_index).map_err(js_err)?)
+    }
+
+    pub fn validation_report(&self, id: u32, kb_index: usize) -> Result<String, JsValue> {
+        to_json(&self.0.validation_report(id, kb_index).map_err(js_err)?)
+    }
+
+    pub fn repair_plan(&self, id: u32, kb_index: usize) -> Result<String, JsValue> {
+        to_json(&self.0.repair_plan(id, kb_index).map_err(js_err)?)
+    }
+
+    pub fn apply_repair_plan(
+        &mut self,
+        id: u32,
+        kb_index: usize,
+        plan_json: &str,
+    ) -> Result<String, JsValue> {
+        let plan: RepairPlan = from_json(plan_json)?;
+        to_json(
+            &self
+                .0
+                .apply_repair_plan(id, kb_index, plan)
+                .map_err(js_err)?,
+        )
+    }
+
+    pub fn layer_matrix(
+        &self,
+        id: u32,
+        kb_index: usize,
+        type_code: u32,
+        include_high_codes: bool,
+    ) -> Result<String, JsValue> {
+        to_json(
+            &self
+                .0
+                .layer_matrix(id, kb_index, type_code, include_high_codes)
+                .map_err(js_err)?,
+        )
+    }
+
+    pub fn dead_key_graph(&self, id: u32, kb_index: usize) -> Result<String, JsValue> {
+        to_json(&self.0.dead_key_graph(id, kb_index).map_err(js_err)?)
+    }
+
+    pub fn comments(&self, id: u32, kb_index: usize) -> Result<String, JsValue> {
+        to_json(&self.0.comments(id, kb_index).map_err(js_err)?)
+    }
+
+    pub fn set_comments(
+        &mut self,
+        id: u32,
+        kb_index: usize,
+        comments_json: &str,
+    ) -> Result<(), JsValue> {
+        let comments: Comments = from_json(comments_json)?;
+        self.0.set_comments(id, kb_index, comments).map_err(js_err)
+    }
+
+    pub fn bundle_metadata(&self, id: u32) -> Result<String, JsValue> {
+        to_json(&self.0.bundle_metadata(id).map_err(js_err)?)
+    }
+
+    pub fn set_bundle_metadata(&mut self, id: u32, patch_json: &str) -> Result<String, JsValue> {
+        let patch: BundleMetadataPatch = from_json(patch_json)?;
+        to_json(&self.0.set_bundle_metadata(id, patch).map_err(js_err)?)
     }
 
     pub fn undo_label(&self, id: u32) -> Result<Option<String>, JsValue> {
@@ -157,6 +272,20 @@ impl Session {
                 .set_key_output(id, kb_index, type_code, mask, dead_state, code, output)
                 .map_err(js_err)?,
         )
+    }
+
+    pub fn set_key_output_in_map(
+        &mut self,
+        id: u32,
+        kb_index: usize,
+        set_id: &str,
+        map_index: u32,
+        code: u16,
+        output: String,
+    ) -> Result<(), JsValue> {
+        self.0
+            .set_key_output_in_map(id, kb_index, set_id, map_index, code, output)
+            .map_err(js_err)
     }
 
     pub fn clear_key(
@@ -445,5 +574,35 @@ mod tests {
                 .any(|n| n == "Українська.bundle/Contents/Resources/Українська.keylayout"),
             ".keylayout stem lost Cyrillic letters: {names:?}"
         );
+    }
+
+    #[test]
+    fn open_bundle_zip_imports_exported_bundle() {
+        let mut s = Session::new();
+        let id = new_doc_id(&mut s, "MyLayout");
+        let bytes = s.export_bundle_zip(id).unwrap();
+
+        let imported_json = s.open_bundle_zip(&bytes).unwrap();
+        let imported: serde_json::Value = serde_json::from_str(&imported_json).unwrap();
+
+        assert_eq!(imported["is_bundle"], true);
+        assert_eq!(imported["keyboard_names"][0], "MyLayout");
+    }
+
+    #[test]
+    fn open_bundle_zip_rejects_traversal_entries() {
+        let mut buf = Cursor::new(Vec::<u8>::new());
+        let mut zip = ZipWriter::new(&mut buf);
+        let opts: SimpleFileOptions = SimpleFileOptions::default()
+            .compression_method(CompressionMethod::Stored)
+            .unix_permissions(0o644);
+        zip.start_file("Bad.bundle/../evil", opts).unwrap();
+        zip.write_all(b"evil").unwrap();
+        zip.finish().unwrap();
+
+        let files = zip_to_bundle_files(&buf.into_inner()).unwrap();
+        let mut state = AppState::new();
+
+        assert!(state.open_bundle_files(files, None).is_err());
     }
 }

@@ -16,7 +16,7 @@ no Xcode, no Apple Developer account, no Carbon APIs. Reads and writes the same
 
 <img src="docs/screenshots/combined/editor.png" alt="Keymano editor — light and dark themes" width="820">
 
-<sub>Every screenshot below is split diagonally: light theme top-left, dark theme bottom-right.</sub>
+<sub>Current screenshots are generated from the live app during the release check.</sub>
 
 </div>
 
@@ -124,7 +124,7 @@ Polski · Українська · Русский · 日本語 · 简体中文 ·
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/combined/xml.png" alt="Live XML preview and validation"><br><sub><b>XML &amp; Validation</b> — live `.keylayout` preview + auto-repair.</sub></td>
-    <td width="50%" valign="top"><br><b>Themes</b><br><sub>Each image is one screenshot split diagonally — light (top-left) and dark (bottom-right) of the same screen. The app also follows your system appearance automatically.</sub></td>
+    <td width="50%" valign="top"><br><b>Themes</b><br><sub>The app supports light, dark, and system appearance; screenshots are regenerated from the current UI before release.</sub></td>
   </tr>
 </table>
 
@@ -387,7 +387,10 @@ The Rust core is portable and Tauri-free, so the same parsing and serialization
 logic powers the desktop app (over Tauri IPC) and the browser build (compiled to
 WebAssembly) — one engine everywhere — as well as the tests.
 Contributor docs: [`docs/DEVELOP.md`](docs/DEVELOP.md). User guide:
-[`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md).
+[`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md). Tutorials:
+[`docs/tutorials/`](docs/tutorials/). Use-case guides:
+[`docs/use-cases/`](docs/use-cases/). Community template rules:
+[`docs/TEMPLATE_CONTRIBUTING.md`](docs/TEMPLATE_CONTRIBUTING.md).
 
 ---
 
@@ -401,8 +404,9 @@ public issue.
 Quick local checks before a PR:
 
 ```bash
-pnpm lint && pnpm wasm:build && pnpm exec tsc -b && pnpm test
-cargo test -p keylayout-core -p keymano-session
+pnpm lint && pnpm wasm:build && pnpm exec tsc -b && pnpm test && pnpm coverage
+pnpm e2e
+cargo test -p keylayout-core -p keymano-session -p keymano-wasm
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 

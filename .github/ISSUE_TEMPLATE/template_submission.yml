@@ -1,0 +1,65 @@
+name: Community template submission
+description: Submit a keyboard layout example for Keymano
+title: "Template: "
+labels: ["template-submission"]
+body:
+  - type: input
+    id: layout-name
+    attributes:
+      label: Layout name
+      placeholder: "Example: Ukrainian Phonetic"
+    validations:
+      required: true
+  - type: input
+    id: language-script
+    attributes:
+      label: Language and script
+      placeholder: "Example: Ukrainian / Cyrillic"
+    validations:
+      required: true
+  - type: input
+    id: base-keyboard
+    attributes:
+      label: Base keyboard
+      placeholder: "Example: U.S. ANSI"
+    validations:
+      required: true
+  - type: dropdown
+    id: artifact
+    attributes:
+      label: Submitted artifact
+      options:
+        - .keylayout
+        - .bundle.zip
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: Layout license
+      placeholder: "Example: CC0-1.0, MIT, Apache-2.0"
+    validations:
+      required: true
+  - type: checkboxes
+    id: provenance
+    attributes:
+      label: Provenance
+      options:
+        - label: I created this layout or have permission to redistribute it.
+          required: true
+        - label: This is not copied from a proprietary Apple or third-party layout without permission.
+          required: true
+        - label: I tested it in Keymano validation with zero errors.
+          required: true
+  - type: textarea
+    id: preview
+    attributes:
+      label: Preview / reference sheet
+      description: Attach a screenshot or describe the key mapping.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and limitations
+      description: Include macOS versions tested and any known missing characters.

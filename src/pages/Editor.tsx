@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link2Off, Link2, ArrowLeftRight, Pencil, Search, Image, FileText } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge, Button, Chip, Input, Segmented } from "@/components/ui";
+import { Badge, Button, Card, Chip, Input, Segmented } from "@/components/ui";
 import { Keyboard } from "@/features/keyboard/Keyboard";
 import { KeyContextMenu } from "@/features/keyboard/KeyContextMenu";
 import { exportKeyboardPng } from "@/features/keyboard/exportImage";
@@ -159,6 +159,81 @@ function FindBar() {
   );
 }
 
+const PALETTE = [
+  "á", "é", "í", "ó", "ú", "ñ", "ü", "ç", "ø", "å", "æ", "œ",
+  "ї", "є", "ґ", "і", "č", "š", "ž", "€", "£", "—", "…", "°", "·",
+];
+
+function UnicodePalette() {
+  const { t } = useTranslation("editor");
+  const selectedCode = useEditor((s) => s.selectedCode);
+  const setKeyOutput = useEditor((s) => s.setKeyOutput);
+  const [q, setQ] = React.useState("");
+  const filtered = PALETTE.filter((ch) => {
+    const code = "U+" + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0");
+    return !q || ch.includes(q) || code.toLowerCase().includes(q.toLowerCase());
+  });
+  return (
+    <Card className="space-y-2 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold">{t("palette.title")}</h3>
+          <p className="text-xs text-[var(--text-muted)]">{t("palette.help")}</p>
+        </div>
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t("palette.search")}
+          className="h-7 w-32"
+        />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {filtered.map((ch) => (
+          <Button
+            key={ch}
+            size="sm"
+            variant="outline"
+            disabled={selectedCode == null}
+            title={"U+" + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}
+            onClick={() => selectedCode != null && void setKeyOutput(selectedCode, ch)}
+          >
+            {ch}
+          </Button>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function TypingSimulator() {
+  const { t } = useTranslation("editor");
+  const snapshot = useEditor((s) => s.snapshot);
+  const [sample, setSample] = React.useState(() => t("simulator.defaultSample"));
+  const steps = React.useMemo(() => {
+    const keys = snapshot?.keys ?? [];
+    return [...sample].map((ch) => {
+      const key = keys.find((k) => k.output === ch || k.display === ch);
+      return { ch, code: key?.code ?? null, dead: key?.is_dead ?? false };
+    });
+  }, [sample, snapshot]);
+  return (
+    <Card className="space-y-2 p-3">
+      <div>
+        <h3 className="text-sm font-semibold">{t("simulator.title")}</h3>
+        <p className="text-xs text-[var(--text-muted)]">{t("simulator.help")}</p>
+      </div>
+      <Input value={sample} onChange={(e) => setSample(e.target.value)} aria-label={t("simulator.sample")} />
+      <div className="flex flex-wrap gap-1.5 text-xs">
+        {steps.map((step, i) => (
+          <Badge key={`${step.ch}-${i}`} tone={step.code == null ? "warning" : step.dead ? "warning" : "neutral"}>
+            {step.ch} {step.code == null ? "×" : `→ ${step.code}`}
+          </Badge>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 function Inspector({ onEdit }: { onEdit: (code: number) => void }) {
   const { t } = useTranslation("editor");
   const selectedCode = useEditor((s) => s.selectedCode);
@@ -203,6 +278,37 @@ function Inspector({ onEdit }: { onEdit: (code: number) => void }) {
         <p className="mt-1.5 text-xs text-[var(--text-muted)]">{t("inspector.editLockedHint")}</p>
       )}
     </div>
+  );
+}
+
+function MobileInspectorSheet({ onEdit }: { onEdit: (code: number) => void }) {
+  const { t } = useTranslation("editor");
+  const [isMobile, setIsMobile] = React.useState(() =>
+    typeof window !== "undefined" && "matchMedia" in window
+      ? window.matchMedia("(max-width: 1023px)").matches
+      : false,
+  );
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !("matchMedia" in window)) return;
+    const query = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  if (!isMobile) return null;
+
+  return (
+    <details className="sticky bottom-2 z-20 rounded-xl border border-[var(--border)] bg-[var(--panel)] p-3 shadow-lg lg:hidden">
+      <summary className="cursor-pointer list-none font-display text-sm font-semibold">
+        {t("inspector.title")}
+      </summary>
+      <div className="mt-3 max-h-[45vh] overflow-auto">
+        <Inspector onEdit={onEdit} />
+      </div>
+    </details>
   );
 }
 
@@ -299,12 +405,19 @@ export function EditorPage() {
             onContextKey={(code, x, y) => setCtxMenu({ code, x, y })}
           />
         </div>
+
+        <div className="grid gap-3 xl:grid-cols-2">
+          <UnicodePalette />
+          <TypingSimulator />
+        </div>
       </div>
 
-      <aside data-tour="tour-inspector" className="w-full shrink-0 rounded-xl border border-[var(--border)] bg-[var(--panel)] p-4 lg:w-72">
+      <aside data-tour="tour-inspector" className="hidden w-full shrink-0 rounded-xl border border-[var(--border)] bg-[var(--panel)] p-4 lg:block lg:w-72">
         <h3 className="font-display mb-3 text-base font-semibold">{te("inspector.title")}</h3>
         <Inspector onEdit={(c) => setEditing(c)} />
       </aside>
+
+      <MobileInspectorSheet onEdit={(c) => setEditing(c)} />
 
       {editing != null && <KeyEditor key={editing} code={editing} onClose={() => setEditing(null)} />}
       {ctxMenu && (

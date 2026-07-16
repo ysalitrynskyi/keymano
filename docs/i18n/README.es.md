@@ -1,5 +1,7 @@
 # Keymano — Editor de distribuciones de teclado para macOS
 
+> Source freshness: `README.md` sha256:b199d8a7144e.
+
 > 🌐 Este es un resumen traducido. La documentación completa está en inglés: **[README](../../README.md)**.
 
 > 🟢 **¿Nuevo en GitHub o no eres desarrollador?** Lee la **[guía de inicio (inglés)](../../docs/GETTING_STARTED.md)** en lenguaje sencillo.
