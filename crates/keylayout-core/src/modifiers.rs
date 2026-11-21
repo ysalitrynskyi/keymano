@@ -173,10 +173,7 @@ pub fn spec_matches(spec: &ModifierSpec, mask: ModMask) -> bool {
     }
     // any unmentioned modifier must be absent
     let unmentioned = ModMask::ALL & !mentioned;
-    if mask.0 & unmentioned != 0 {
-        return false;
-    }
-    true
+    mask.0 & unmentioned == 0
 }
 
 /// Resolve a mask to a keymap index for a modifier map.

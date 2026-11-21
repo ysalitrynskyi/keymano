@@ -249,12 +249,14 @@ pub fn build_strings(names: &BTreeMap<String, String>) -> String {
 fn decode_strings_bytes(b: &[u8]) -> String {
     fn utf16(body: &[u8], le: bool) -> String {
         let units: Vec<u16> = body
-            .chunks_exact(2)
-            .map(|c| {
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|&c| {
                 if le {
-                    u16::from_le_bytes([c[0], c[1]])
+                    u16::from_le_bytes(c)
                 } else {
-                    u16::from_be_bytes([c[0], c[1]])
+                    u16::from_be_bytes(c)
                 }
             })
             .collect();
