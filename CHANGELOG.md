@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Security
+- **Web image now serves from `nginx:1.30-alpine`** (stable, 1.30.7 or later)
+  instead of the end-of-life `nginx:1.27-alpine`, which will never receive the
+  fixes for the November 2026 nginx advisories (CVE-2026-123007 and others,
+  fixed in 1.30.7 / 1.31.9).
+
 ## [0.2.4] — 2026-05-22
 
 ### Fixed

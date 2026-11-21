@@ -43,7 +43,7 @@ COPY --from=wasm /pkg ./src/wasm
 RUN pnpm exec tsc -b && pnpm exec vite build
 
 # ── Serve: static files behind nginx ─────────────────────────────────────────
-FROM nginx:1.27-alpine AS serve
+FROM nginx:1.30-alpine AS serve
 
 # Pristine templates rendered at startup by the entrypoint (so optional
 # analytics can be toggled with just an env var + container restart). They live
